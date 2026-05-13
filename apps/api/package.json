@@ -1,0 +1,11 @@
+{
+  "name": "@kindaseen/api",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "dev": ".venv/bin/python -m uvicorn main:app --reload"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

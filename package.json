@@ -1,0 +1,15 @@
+{
+  "name": "kindaseen",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green -p \"[{name}]\" \"pnpm --filter @kindaseen/api dev\" \"pnpm --filter @kindaseen/web dev\"",
+    "dev:web": "pnpm --filter @kindaseen/web dev",
+    "dev:api": "pnpm --filter @kindaseen/api dev",
+    "build": "pnpm --filter web build",
+    "lint": "pnpm --filter web lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
