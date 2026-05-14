@@ -6,10 +6,29 @@
     "dev": "concurrently -n api,web -c blue,green -p \"[{name}]\" \"pnpm --filter @kindaseen/api dev\" \"pnpm --filter @kindaseen/web dev\"",
     "dev:web": "pnpm --filter @kindaseen/web dev",
     "dev:api": "pnpm --filter @kindaseen/api dev",
-    "build": "pnpm --filter web build",
-    "lint": "pnpm --filter web lint"
+    "build": "pnpm --filter @kindaseen/web build",
+    "lint": "concurrently -n py,web -c yellow,cyan -p \"[{name}]\" \"cd apps/api && ruff check .\" \"pnpm --filter @kindaseen/web lint\"",
+    "lint:fix": "concurrently -n py,web -c yellow,cyan -p \"[{name}]\" \"cd apps/api && ruff check --fix .\" \"pnpm --filter @kindaseen/web lint --fix\"",
+    "format": "concurrently -n py,web -c yellow,cyan -p \"[{name}]\" \"cd apps/api && ruff format .\" \"pnpm --filter @kindaseen/web prettier --write .\"",
+    "format:check": "concurrently -n py,web -c yellow,cyan -p \"[{name}]\" \"cd apps/api && ruff format --check .\" \"pnpm --filter @kindaseen/web prettier --check .\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/web/**/*.{js,jsx,ts,tsx}": [
+      "pnpm --filter @kindaseen/web exec eslint --fix",
+      "pnpm --filter @kindaseen/web exec prettier --write"
+    ],
+    "apps/web/**/*.{json,css,md}": [
+      "pnpm --filter @kindaseen/web exec prettier --write"
+    ],
+    "apps/api/**/*.py": [
+      "bash -c 'cd apps/api && source .venv/bin/activate && ruff check --fix \"$@\"' --",
+      "bash -c 'cd apps/api && source .venv/bin/activate && ruff format \"$@\"' --"
+    ]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.4"
   }
 }

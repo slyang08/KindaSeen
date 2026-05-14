@@ -1,11 +1,71 @@
+# root .gitignore
+# =====================
+# Node / Frontend
+# =====================
 node_modules/
 .next/
-.env
-.env.local
+out/
+dist/
+coverage/
+.vercel/
+
+# =====================
+# Python / Backend
+# =====================
 __pycache__/
 *.pyc
 .venv/
-apps/api/.venv/
 *.egg-info/
+next-env.d.ts
+
+# =====================
+# tooling cache
+# =====================
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+*.tsbuildinfo
+
+# =====================
+# env
+# =====================
+.env
+.env.*
+!.env.example
+
+# =====================
+# logs
+# =====================
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# =====================
+# OS
+# =====================
 .DS_Store
-dist/
+
+# =====================
+# misc
+# =====================
+*.pem
+
+# =====================
+# IDE/Editor
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =====================
+# yarn (optional legacy)
+# =====================
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
