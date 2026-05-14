@@ -1,8 +1,14 @@
 # apps/api/main.py
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="KindaSeen API")
+from app.core.database import init_db
+
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="KindaSeen API", version="0.0.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -11,6 +17,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup():
+    init_db()
+    logger.info("Database connected and tables created")
 
 
 @app.get("/")
