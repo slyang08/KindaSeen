@@ -10,7 +10,7 @@ select = [
   "B",   # flake8-bugbear
   "UP",  # pyupgrade
 ]
-ignore = ["E501"]
+ignore = ["E501", "B008"]
 
 [lint.isort]
 known-first-party = ["app"]
