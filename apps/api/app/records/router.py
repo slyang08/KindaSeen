@@ -16,7 +16,7 @@ def get_record_service(db: Session = Depends(get_db)) -> RecordService:
     return RecordService(RecordRepository(db))
 
 
-# 暫時用固定 user_id，之後換成 JWT 驗證
+# Temporary to use user_id, and use JWT auth later
 TEMP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 

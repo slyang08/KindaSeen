@@ -20,6 +20,9 @@ class RecordService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
         return record
 
+    def get_deleted(self, user_id: uuid.UUID):
+        return self.repository.get_deleted(user_id)
+
     def create(self, data: RecordCreate, user_id: uuid.UUID):
         return self.repository.create(data, user_id)
 
