@@ -1,4 +1,4 @@
-# apps/api/src/core/config.py
+# apps/api/app/core/config.py
 from pydantic_settings import BaseSettings
 
 

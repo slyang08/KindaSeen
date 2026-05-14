@@ -1,4 +1,4 @@
-# apps/api/src/entries/model.py
+# apps/api/app/records/model.py
 import uuid
 from datetime import datetime
 
@@ -9,8 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class Entry(Base):
-    __tablename__ = "entries"
+class Record(Base):
+    __tablename__ = "records"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
@@ -23,3 +23,4 @@ class Entry(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, default=None)

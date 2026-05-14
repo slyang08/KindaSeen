@@ -1,4 +1,4 @@
-# apps/api/src/core/database.py
+# apps/api/app/core/database.py
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
@@ -15,7 +15,7 @@ class Base(DeclarativeBase):
 
 
 def init_db() -> None:
-    from app.entries import model  # noqa: F401
+    from app.records import model  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
