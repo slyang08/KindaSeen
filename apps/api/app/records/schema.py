@@ -1,14 +1,31 @@
 # apps/api/app/records/schema.py
 import uuid
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
+class MediaType(StrEnum):
+    movie = "movie"
+    drama = "drama"
+    anime = "anime"
+    manga = "manga"
+    novel = "novel"
+    podcast = "podcast"
+
+
+class Status(StrEnum):
+    completed = "completed"
+    watching = "watching"
+    dropped = "dropped"
+    want_to_watch = "want_to_watch"
+
+
 class RecordBase(BaseModel):
     title: str
-    media_type: str
-    status: str
+    media_type: MediaType
+    status: Status
     rating: int | None = None
     notes: str | None = None
 
@@ -19,8 +36,8 @@ class RecordCreate(RecordBase):
 
 class RecordUpdate(BaseModel):
     title: str | None = None
-    media_type: str | None = None
-    status: str | None = None
+    media_type: MediaType | None = None
+    status: Status | None = None
     rating: int | None = None
     notes: str | None = None
 
