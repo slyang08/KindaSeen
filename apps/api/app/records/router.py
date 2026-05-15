@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.records.repository import RecordRepository
 from app.records.schema import RecordCreate, RecordResponse, RecordUpdate
@@ -16,42 +17,63 @@ def get_record_service(db: Session = Depends(get_db)) -> RecordService:
     return RecordService(RecordRepository(db))
 
 
-# Temporary to use user_id, and use JWT auth later
-TEMP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
-
-
 @router.get("/", response_model=list[RecordResponse])
-def get_records(service: RecordService = Depends(get_record_service)):
-    return service.get_all(TEMP_USER_ID)
+def get_records(
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    return service.get_all(user_id)
 
 
 @router.get("/trash", response_model=list[RecordResponse])
-def get_deleted_records(service: RecordService = Depends(get_record_service)):
-    return service.get_deleted(TEMP_USER_ID)
+def get_deleted_records(
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    return service.get_deleted(get_current_user_id)
 
 
 @router.get("/{record_id}", response_model=RecordResponse)
-def get_record(record_id: uuid.UUID, service: RecordService = Depends(get_record_service)):
-    return service.get_by_id(record_id, TEMP_USER_ID)
+def get_record(
+    record_id: uuid.UUID,
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    return service.get_by_id(record_id, user_id)
 
 
 @router.post("/", response_model=RecordResponse, status_code=status.HTTP_201_CREATED)
-def create_record(data: RecordCreate, service: RecordService = Depends(get_record_service)):
-    return service.create(data, TEMP_USER_ID)
+def create_record(
+    data: RecordCreate,
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    return service.create(data, user_id)
 
 
 @router.patch("/{record_id}", response_model=RecordResponse)
 def update_record(
-    record_id: uuid.UUID, data: RecordUpdate, service: RecordService = Depends(get_record_service)
+    record_id: uuid.UUID,
+    data: RecordUpdate,
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    return service.update(record_id, data, TEMP_USER_ID)
+    return service.update(record_id, data, user_id)
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_record(record_id: uuid.UUID, service: RecordService = Depends(get_record_service)):
-    service.delete(record_id, TEMP_USER_ID)
+def delete_record(
+    record_id: uuid.UUID,
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    service.delete(record_id, user_id)
 
 
 @router.patch("/{record_id}/restore", response_model=RecordResponse)
-def restore_record(record_id: uuid.UUID, service: RecordService = Depends(get_record_service)):
-    return service.restore(record_id, TEMP_USER_ID)
+def restore_record(
+    record_id: uuid.UUID,
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    return service.restore(record_id, user_id)

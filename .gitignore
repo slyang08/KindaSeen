@@ -69,3 +69,8 @@ pnpm-debug.log*
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+
+# =====================
+# Supabase
+# =====================
+supabase/.temp/
