@@ -4,7 +4,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/auth/AuthProvider"
 
 export default function LoginPage() {
   const { login } = useAuth()
