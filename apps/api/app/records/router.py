@@ -30,7 +30,7 @@ def get_deleted_records(
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    return service.get_deleted(get_current_user_id)
+    return service.get_deleted(user_id)
 
 
 @router.get("/{record_id}", response_model=RecordResponse)

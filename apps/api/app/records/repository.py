@@ -16,6 +16,7 @@ class RecordRepository:
         return (
             self.db.query(Record)
             .filter(Record.user_id == user_id, Record.deleted_at.is_(None))
+            .order_by(Record.created_at.desc())
             .all()
         )
 
@@ -23,6 +24,7 @@ class RecordRepository:
         return (
             self.db.query(Record)
             .filter(Record.user_id == user_id, Record.deleted_at.is_not(None))
+            .order_by(Record.deleted_at.desc())
             .all()
         )
 
