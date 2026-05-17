@@ -1,10 +1,12 @@
 // packages/shared/src/record.ts
+import type { MediaType, Status } from "./enums";
+
 export type Record = {
   id: string;
   user_id: string;
   title: string;
-  media_type: string;
-  status: string;
+  media_type: MediaType;
+  status: Status;
   rating: number | null;
   notes: string | null;
   created_at: string;
@@ -14,8 +16,8 @@ export type Record = {
 
 export type RecordCreate = {
   title: string;
-  media_type: string;
-  status: string;
+  media_type: MediaType;
+  status: Status;
   rating?: number | null;
   notes?: string | null;
 };
