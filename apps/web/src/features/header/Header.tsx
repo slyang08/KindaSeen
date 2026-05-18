@@ -1,0 +1,59 @@
+// src/features/auth/Header.tsx
+"use client"
+
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/features/auth/AuthProvider"
+
+export function Header() {
+  const { user, loading, logout } = useAuth()
+  const router = useRouter()
+
+  return (
+    <header className="border-b">
+      <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+        <Link href="/" className="font-semibold text-lg">
+          KindaSeen
+        </Link>
+
+        <div className="flex items-center gap-3">
+          {!loading && (
+            <>
+              {user ? (
+                <>
+                  <span className="text-sm text-muted-foreground">
+                    Hi, {user.email?.split("@", 1)}
+                  </span>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/records">My Records</Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      await logout()
+                      router.push("/")
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/login">Login</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href="/register">Register</Link>
+                  </Button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}

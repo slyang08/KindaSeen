@@ -1,4 +1,4 @@
-// apps/web/src/app/login/page.tsx
+// apps/web/src/app/register/page.tsx
 "use client"
 
 import Link from "next/link"
@@ -10,22 +10,34 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/features/auth/AuthProvider"
 
-export default function LoginPage() {
-  const { login } = useAuth()
+export default function RegisterPage() {
+  const { register } = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setError(null)
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+
     setLoading(true)
     try {
-      await login(email, password)
+      await register(email, password)
       router.push("/records")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Registration failed")
     } finally {
       setLoading(false)
     }
@@ -33,7 +45,8 @@ export default function LoginPage() {
 
   return (
     <div className="max-w-sm mx-auto p-6 mt-16 space-y-6">
-      <h1 className="text-2xl font-semibold">Login</h1>
+      <h1 className="text-2xl font-semibold">Register</h1>
+
       <div className="space-y-4">
         <div className="space-y-1">
           <Label htmlFor="email">Email</Label>
@@ -54,23 +67,34 @@ export default function LoginPage() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="confirm-password">Confirm Password</Label>
+          <Input
+            id="confirm-password"
+            type="password"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleRegister()}
           />
         </div>
 
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="underline underline-offset-4">
-              Register
+            Already have an account?{" "}
+            <Link href="/login" className="underline underline-offset-4">
+              Login
             </Link>
           </p>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <Button className="w-full" onClick={handleLogin} disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
+        <Button className="w-full" onClick={handleRegister} disabled={loading}>
+          {loading ? "Creating account..." : "Register"}
         </Button>
       </div>
     </div>
