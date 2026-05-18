@@ -8,6 +8,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { useAuth } from "@/features/auth/AuthProvider"
 
 export default function RegisterPage() {
@@ -36,8 +37,8 @@ export default function RegisterPage() {
     try {
       await register(email, password)
       router.push("/records")
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Registration failed")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed")
     } finally {
       setLoading(false)
     }
@@ -94,7 +95,14 @@ export default function RegisterPage() {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <Button className="w-full" onClick={handleRegister} disabled={loading}>
-          {loading ? "Creating account..." : "Register"}
+          {loading ? (
+            <>
+              <Spinner />
+              <span>Creating account...</span>
+            </>
+          ) : (
+            "Register"
+          )}
         </Button>
       </div>
     </div>
