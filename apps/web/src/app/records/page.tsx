@@ -12,7 +12,7 @@ import { RecordList } from "@/features/records/RecordList"
 import { recordsApi } from "@/lib/records"
 
 export default function RecordsPage() {
-  const { user, loading, logout } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [records, setRecords] = useState<MediaRecord[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -59,28 +59,11 @@ export default function RecordsPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">KindaSeen</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{user.email}</span>
-          <Button variant="outline" size="sm" onClick={() => router.push("/trash")}>
-            Trash
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              await logout()
-              router.push("/login")
-            }}
-          >
-            Logout
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
         <Button onClick={() => setDialogOpen(true)}>Add Record</Button>
+        <Button variant="outline" size="sm" onClick={() => router.push("/trash")}>
+          Trash
+        </Button>
       </div>
 
       <RecordList records={records} onEdit={handleEdit} onDelete={handleDelete} />

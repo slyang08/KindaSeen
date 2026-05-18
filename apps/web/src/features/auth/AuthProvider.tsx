@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase"
 type AuthContextType = {
   user: User | null
   loading: boolean
+  register: (email: string, password: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   getToken: () => Promise<string | null>
@@ -50,6 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  // ✅ register
+  const register = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+  }
+
   // ✅ login
   const login = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -73,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, getToken }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   )
