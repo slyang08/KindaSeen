@@ -7,6 +7,8 @@ export type Record = {
   title: string;
   media_type: MediaType;
   status: Status;
+  season: number | null;
+  episode: number | null;
   rating: number | null;
   notes: string | null;
   created_at: string;
@@ -18,6 +20,8 @@ export type RecordCreate = {
   title: string;
   media_type: MediaType;
   status: Status;
+  season?: number | null;
+  episode?: number | null;
   rating?: number | null;
   notes?: string | null;
 };
