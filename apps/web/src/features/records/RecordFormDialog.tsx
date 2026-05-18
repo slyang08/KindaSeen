@@ -2,9 +2,15 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { MediaType, Record as MediaRecord, RecordCreate, Status } from "@kindaseen/shared"
-import { MEDIA_TYPES, STATUSES } from "@kindaseen/shared"
-import { useForm } from "react-hook-form"
+import {
+  MEDIA_TYPES,
+  type MediaType,
+  type Record as MediaRecord,
+  type RecordCreate,
+  type Status,
+  STATUSES,
+} from "@kindaseen/shared"
+import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -28,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 const MEDIA_TYPE_LABELS: Record<string, string> = {
   movie: "Movie",
+  variety: "Variety Show",
   drama: "Drama",
   anime: "Anime",
   manga: "Manga",
@@ -42,10 +49,15 @@ const STATUS_LABELS: Record<string, string> = {
   want_to_watch: "Want to Watch",
 }
 
+const SEASON_SUPPORTED: MediaType[] = ["drama", "anime", "variety", "podcast"]
+const EPISODE_SUPPORTED: MediaType[] = ["drama", "anime", "variety", "manga", "podcast"]
+
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   media_type: z.enum([...MEDIA_TYPES], { required_error: "Media type is required" }),
   status: z.enum([...STATUSES], { required_error: "Status is required" }),
+  season: z.number().min(1).nullable().optional(),
+  episode: z.number().min(1).nullable().optional(),
   rating: z.number().min(1).max(10).nullable().optional(),
   notes: z.string().nullable().optional(),
 })
@@ -54,6 +66,8 @@ type FormValues = {
   title: string
   media_type: MediaType
   status: Status
+  season: number | null | undefined
+  episode: number | null | undefined
   rating: number | null | undefined
   notes: string | null | undefined
 }
@@ -71,6 +85,7 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
     register,
     handleSubmit,
     setValue,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -80,16 +95,24 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
       title: defaultValues?.title ?? "",
       media_type: defaultValues?.media_type,
       status: defaultValues?.status,
+      season: defaultValues?.season ?? null,
+      episode: defaultValues?.episode ?? null,
       rating: defaultValues?.rating ?? null,
       notes: defaultValues?.notes ?? "",
     },
   })
+
+  const selectedMediaType = useWatch({ control, name: "media_type" })
+  const showSeason = selectedMediaType && SEASON_SUPPORTED.includes(selectedMediaType)
+  const showEpisode = selectedMediaType && EPISODE_SUPPORTED.includes(selectedMediaType)
 
   const onFormSubmit = async (values: FormValues) => {
     await onSubmit({
       title: values.title,
       media_type: values.media_type,
       status: values.status,
+      season: values.season ?? null,
+      episode: values.episode ?? null,
       rating: values.rating ?? null,
       notes: values.notes ?? null,
     })
@@ -99,7 +122,7 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Add Record" : "Edit Record"}</DialogTitle>
         </DialogHeader>
@@ -152,6 +175,42 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
             </Select>
             {errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}
           </div>
+
+          {showSeason && (
+            <div className="space-y-1">
+              <Label htmlFor="season">Season</Label>
+              <Input
+                id="season"
+                type="number"
+                min={1}
+                placeholder="Optional"
+                {...register("season", {
+                  setValueAs: (v) => (v === "" ? null : Number(v)),
+                })}
+              />
+              {errors.season && <p className="text-sm text-destructive">{errors.season.message}</p>}
+            </div>
+          )}
+
+          {showEpisode && (
+            <div className="space-y-1">
+              <Label htmlFor="episode">
+                {selectedMediaType === "manga" ? "Chapter" : "Episode"}
+              </Label>
+              <Input
+                id="episode"
+                type="number"
+                min={1}
+                placeholder="Optional"
+                {...register("episode", {
+                  setValueAs: (v) => (v === "" ? null : Number(v)),
+                })}
+              />
+              {errors.episode && (
+                <p className="text-sm text-destructive">{errors.episode.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-1">
             <Label htmlFor="rating">Rating (1-10)</Label>

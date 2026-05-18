@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 class MediaType(StrEnum):
     movie = "movie"
+    variety = "variety"
     drama = "drama"
     anime = "anime"
     manga = "manga"
@@ -26,6 +27,8 @@ class RecordBase(BaseModel):
     title: str
     media_type: MediaType
     status: Status
+    season: int | None = None
+    episode: int | None = None
     rating: int | None = None
     notes: str | None = None
 
@@ -38,6 +41,8 @@ class RecordUpdate(BaseModel):
     title: str | None = None
     media_type: MediaType | None = None
     status: Status | None = None
+    season: int | None = None
+    episode: int | None = None
     rating: int | None = None
     notes: str | None = None
 

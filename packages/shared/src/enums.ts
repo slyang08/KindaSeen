@@ -1,6 +1,7 @@
 // packages/shared/src/enums.ts
 export const MEDIA_TYPES = [
   "movie",
+  "variety",
   "drama",
   "anime",
   "manga",
