@@ -46,3 +46,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha # Use GitHub Actions cache for faster builds
           cache-to: type=gha,mode=max
+
+      - name: Deploy to Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
