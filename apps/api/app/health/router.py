@@ -9,6 +9,7 @@ router = APIRouter(prefix="/health", tags=["health"])
 
 
 @router.get("/")
+@router.head("/")
 def health(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
