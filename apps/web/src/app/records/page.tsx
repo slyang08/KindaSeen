@@ -60,7 +60,15 @@ export default function RecordsPage() {
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <Button onClick={() => setDialogOpen(true)}>Add Record</Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => {
+              setDialogOpen(true)
+            }}
+          >
+            Add Record
+          </Button>
+        </div>
         <Button variant="outline" size="sm" onClick={() => router.push("/trash")}>
           Trash
         </Button>
@@ -73,8 +81,8 @@ export default function RecordsPage() {
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         onSubmit={editingRecord ? handleUpdate : handleCreate}
-        defaultValues={editingRecord ?? undefined}
-        mode={editingRecord ? "edit" : "create"}
+        title="Add Manual Record"
+        initialValues={editingRecord ?? undefined}
       />
     </div>
   )
