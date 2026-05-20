@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
 
+import { SearchDialog } from "../search"
+
 export function Header() {
   const { user, loading, logout } = useAuth()
   const router = useRouter()
@@ -23,8 +25,10 @@ export function Header() {
             <>
               {user ? (
                 <>
+                  {/* Header search, after selection, it will be directed to the records page with query */}
+                  <SearchDialog onSelect={() => router.push("/records")} />
                   <span className="text-sm text-muted-foreground">
-                    Hi, {user.email?.split("@", 1)}
+                    Hi, {user.email?.split("@")[0].replace(/^./, (c) => c.toUpperCase())}
                   </span>
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/records">My Records</Link>

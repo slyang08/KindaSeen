@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     database_url: str
     supabase_url: str
     supabase_anon_key: str
+    tmdb_api_token: str
 
     model_config = {"env_file": ".env"}
 

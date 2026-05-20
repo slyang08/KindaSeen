@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   MEDIA_TYPES,
   type MediaType,
-  type Record as MediaRecord,
   type RecordCreate,
   type Status,
   STATUSES,
@@ -13,10 +12,12 @@ import {
 import { useForm, useWatch } from "react-hook-form"
 import { z } from "zod"
 
+import { Spinner } from "@/components/ui"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -76,11 +77,21 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: RecordCreate) => Promise<void>
-  defaultValues?: MediaRecord
-  mode: "create" | "edit"
+
+  title: string
+
+  initialValues?: Partial<RecordCreate>
+  readonlyTitle?: boolean
 }
 
-export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, mode }: Props) {
+export function RecordFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  title,
+  initialValues,
+  readonlyTitle = false,
+}: Props) {
   const {
     register,
     handleSubmit,
@@ -92,22 +103,28 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
-      title: defaultValues?.title ?? "",
-      media_type: defaultValues?.media_type,
-      status: defaultValues?.status,
-      season: defaultValues?.season ?? null,
-      episode: defaultValues?.episode ?? null,
-      rating: defaultValues?.rating ?? null,
-      notes: defaultValues?.notes ?? "",
+      title: initialValues?.title ?? "",
+      media_type: initialValues?.media_type,
+      status: initialValues?.status,
+      season: initialValues?.season ?? null,
+      episode: initialValues?.episode ?? null,
+      rating: initialValues?.rating ?? null,
+      notes: initialValues?.notes ?? "",
     },
   })
 
-  const selectedMediaType = useWatch({ control, name: "media_type" })
+  const selectedMediaType = useWatch({
+    control,
+    name: "media_type",
+  })
+
   const showSeason = selectedMediaType && SEASON_SUPPORTED.includes(selectedMediaType)
+
   const showEpisode = selectedMediaType && EPISODE_SUPPORTED.includes(selectedMediaType)
 
   const onFormSubmit = async (values: FormValues) => {
     await onSubmit({
+      ...initialValues,
       title: values.title,
       media_type: values.media_type,
       status: values.status,
@@ -116,28 +133,37 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
       rating: values.rating ?? null,
       notes: values.notes ?? null,
     })
+
     reset()
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Add Record" : "Edit Record"}</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            Track movies, variety, anime, manga, podcasts, and more.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" placeholder="Enter title" {...register("title")} />
+            <Input
+              id="title"
+              placeholder="Enter title"
+              readOnly={readonlyTitle}
+              {...register("title")}
+            />
             {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label>Media Type</Label>
             <Select
-              defaultValue={defaultValues?.media_type}
+              defaultValue={initialValues?.media_type}
               onValueChange={(val) => setValue("media_type", val as FormValues["media_type"])}
             >
               <SelectTrigger>
@@ -159,7 +185,7 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
           <div className="space-y-1">
             <Label>Status</Label>
             <Select
-              defaultValue={defaultValues?.status}
+              defaultValue={initialValues?.status}
               onValueChange={(val) => setValue("status", val as FormValues["status"])}
             >
               <SelectTrigger>
@@ -183,12 +209,10 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
                 id="season"
                 type="number"
                 min={1}
-                placeholder="Optional"
                 {...register("season", {
                   setValueAs: (v) => (v === "" ? null : Number(v)),
                 })}
               />
-              {errors.season && <p className="text-sm text-destructive">{errors.season.message}</p>}
             </div>
           )}
 
@@ -201,14 +225,10 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
                 id="episode"
                 type="number"
                 min={1}
-                placeholder="Optional"
                 {...register("episode", {
                   setValueAs: (v) => (v === "" ? null : Number(v)),
                 })}
               />
-              {errors.episode && (
-                <p className="text-sm text-destructive">{errors.episode.message}</p>
-              )}
             </div>
           )}
 
@@ -219,18 +239,15 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
               type="number"
               min={1}
               max={10}
-              placeholder="Optional"
               {...register("rating", {
                 setValueAs: (v) => (v === "" ? null : Number(v)),
               })}
             />
-            {errors.rating && <p className="text-sm text-destructive">{errors.rating.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" placeholder="Optional" {...register("notes")} />
-            {errors.notes && <p className="text-sm text-destructive">{errors.notes.message}</p>}
           </div>
 
           <DialogFooter>
@@ -238,7 +255,13 @@ export function RecordFormDialog({ open, onOpenChange, onSubmit, defaultValues, 
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : mode === "create" ? "Add" : "Save"}
+              {isSubmitting ? (
+                <>
+                  <Spinner /> Saving...
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
           </DialogFooter>
         </form>

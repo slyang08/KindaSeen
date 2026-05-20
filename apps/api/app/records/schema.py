@@ -31,6 +31,11 @@ class RecordBase(BaseModel):
     episode: int | None = None
     rating: int | None = None
     notes: str | None = None
+    tmdb_id: int | None = None
+    poster_url: str | None = None
+    overview: str | None = None
+    tmdb_rating: float | None = None
+    genres: list[str] | None = None
 
 
 class RecordCreate(RecordBase):
@@ -45,6 +50,11 @@ class RecordUpdate(BaseModel):
     episode: int | None = None
     rating: int | None = None
     notes: str | None = None
+    tmdb_id: int | None = None
+    poster_url: str | None = None
+    overview: str | None = None
+    tmdb_rating: float | None = None
+    genres: list[str] | None = None
 
 
 class RecordResponse(RecordBase):
