@@ -1,270 +1,51 @@
-// apps/web/src/components/records/RecordFormDialog.tsx
+// apps/web/src/features/records/RecordFormDialog.tsx
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  MEDIA_TYPES,
-  type MediaType,
-  type RecordCreate,
-  type Status,
-  STATUSES,
-} from "@kindaseen/shared"
-import { useForm, useWatch } from "react-hook-form"
-import { z } from "zod"
+import { type RecordCreate } from "@kindaseen/shared"
 
-import { Spinner } from "@/components/ui"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 
-const MEDIA_TYPE_LABELS: Record<string, string> = {
-  movie: "Movie",
-  variety: "Variety Show",
-  drama: "Drama",
-  anime: "Anime",
-  manga: "Manga",
-  novel: "Novel",
-  podcast: "Podcast",
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  completed: "Completed",
-  watching: "Watching",
-  dropped: "Dropped",
-  want_to_watch: "Want to Watch",
-}
-
-const SEASON_SUPPORTED: MediaType[] = ["drama", "anime", "variety", "podcast"]
-const EPISODE_SUPPORTED: MediaType[] = ["drama", "anime", "variety", "manga", "podcast"]
-
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  media_type: z.enum([...MEDIA_TYPES], { required_error: "Media type is required" }),
-  status: z.enum([...STATUSES], { required_error: "Status is required" }),
-  season: z.number().min(1).nullable().optional(),
-  episode: z.number().min(1).nullable().optional(),
-  rating: z.number().min(1).max(10).nullable().optional(),
-  notes: z.string().nullable().optional(),
-})
-
-type FormValues = {
-  title: string
-  media_type: MediaType
-  status: Status
-  season: number | null | undefined
-  episode: number | null | undefined
-  rating: number | null | undefined
-  notes: string | null | undefined
-}
+import { RecordForm } from "./RecordForm"
 
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: RecordCreate) => Promise<void>
-
   title: string
-
-  initialValues?: Partial<RecordCreate>
   readonlyTitle?: boolean
+  initialValues?: Partial<RecordCreate>
+  onSubmit: (data: RecordCreate) => Promise<void>
 }
 
 export function RecordFormDialog({
   open,
   onOpenChange,
-  onSubmit,
   title,
+  readonlyTitle,
   initialValues,
-  readonlyTitle = false,
+  onSubmit,
 }: Props) {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    control,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(formSchema) as any,
-    defaultValues: {
-      title: initialValues?.title ?? "",
-      media_type: initialValues?.media_type,
-      status: initialValues?.status,
-      season: initialValues?.season ?? null,
-      episode: initialValues?.episode ?? null,
-      rating: initialValues?.rating ?? null,
-      notes: initialValues?.notes ?? "",
-    },
-  })
-
-  const selectedMediaType = useWatch({
-    control,
-    name: "media_type",
-  })
-
-  const showSeason = selectedMediaType && SEASON_SUPPORTED.includes(selectedMediaType)
-
-  const showEpisode = selectedMediaType && EPISODE_SUPPORTED.includes(selectedMediaType)
-
-  const onFormSubmit = async (values: FormValues) => {
-    await onSubmit({
-      ...initialValues,
-      title: values.title,
-      media_type: values.media_type,
-      status: values.status,
-      season: values.season ?? null,
-      episode: values.episode ?? null,
-      rating: values.rating ?? null,
-      notes: values.notes ?? null,
-    })
-
-    reset()
-    onOpenChange(false)
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            Track movies, variety, anime, manga, podcasts, and more.
-          </DialogDescription>
+          <DialogDescription>Create or edit your record</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              placeholder="Enter title"
-              readOnly={readonlyTitle}
-              {...register("title")}
-            />
-            {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Media Type</Label>
-            <Select
-              defaultValue={initialValues?.media_type}
-              onValueChange={(val) => setValue("media_type", val as FormValues["media_type"])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select media type" />
-              </SelectTrigger>
-              <SelectContent>
-                {MEDIA_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {MEDIA_TYPE_LABELS[type]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.media_type && (
-              <p className="text-sm text-destructive">{errors.media_type.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Status</Label>
-            <Select
-              defaultValue={initialValues?.status}
-              onValueChange={(val) => setValue("status", val as FormValues["status"])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUSES.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {STATUS_LABELS[status]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.status && <p className="text-sm text-destructive">{errors.status.message}</p>}
-          </div>
-
-          {showSeason && (
-            <div className="space-y-1">
-              <Label htmlFor="season">Season</Label>
-              <Input
-                id="season"
-                type="number"
-                min={1}
-                {...register("season", {
-                  setValueAs: (v) => (v === "" ? null : Number(v)),
-                })}
-              />
-            </div>
-          )}
-
-          {showEpisode && (
-            <div className="space-y-1">
-              <Label htmlFor="episode">
-                {selectedMediaType === "manga" ? "Chapter" : "Episode"}
-              </Label>
-              <Input
-                id="episode"
-                type="number"
-                min={1}
-                {...register("episode", {
-                  setValueAs: (v) => (v === "" ? null : Number(v)),
-                })}
-              />
-            </div>
-          )}
-
-          <div className="space-y-1">
-            <Label htmlFor="rating">Rating (1-10)</Label>
-            <Input
-              id="rating"
-              type="number"
-              min={1}
-              max={10}
-              {...register("rating", {
-                setValueAs: (v) => (v === "" ? null : Number(v)),
-              })}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" placeholder="Optional" {...register("notes")} />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Spinner /> Saving...
-                </>
-              ) : (
-                "Save"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+        <RecordForm
+          initialValues={initialValues}
+          onSubmit={async (data) => {
+            await onSubmit(data)
+            onOpenChange(false)
+          }}
+          readonlyTitle={readonlyTitle}
+        />
       </DialogContent>
     </Dialog>
   )
