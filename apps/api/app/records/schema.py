@@ -27,6 +27,7 @@ class RecordBase(BaseModel):
     title: str
     media_type: MediaType
     status: Status
+    release_year: int | None = None
     season: int | None = None
     episode: int | None = None
     rating: int | None = None
@@ -46,6 +47,7 @@ class RecordUpdate(BaseModel):
     title: str | None = None
     media_type: MediaType | None = None
     status: Status | None = None
+    release_year: int | None = None
     season: int | None = None
     episode: int | None = None
     rating: int | None = None

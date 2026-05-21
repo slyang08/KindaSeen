@@ -33,6 +33,9 @@ function TMDBQueryHandler({
       tmdb_rating: searchParams.get("tmdb_rating") ? Number(searchParams.get("tmdb_rating")) : null,
       poster_url: searchParams.get("poster_url") || null,
       genres: [],
+      release_year: searchParams.get("release_year")
+        ? Number(searchParams.get("release_year"))
+        : null,
     }
 
     setTimeout(() => {
@@ -103,6 +106,11 @@ export default function RecordsPage() {
     setRecords((prev) => prev.filter((res) => res.id !== id))
   }
 
+  const handleTMDBFromUrl = useCallback((data: Partial<RecordCreate>) => {
+    setPendingTMDB(data)
+    setDialogOpen(true)
+  }, [])
+
   // ======================
   // Dialog control
   // ======================
@@ -142,12 +150,7 @@ export default function RecordsPage() {
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       {/* Handle TMDB query string resulting from header search */}
       <Suspense fallback={null}>
-        <TMDBQueryHandler
-          onTMDBFromUrl={(data) => {
-            setPendingTMDB(data)
-            setDialogOpen(true)
-          }}
-        />
+        <TMDBQueryHandler onTMDBFromUrl={handleTMDBFromUrl} />
       </Suspense>
 
       {/* Header Actions */}

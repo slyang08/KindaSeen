@@ -23,7 +23,7 @@ class TMDBResult:
     overview: str
     tmdb_rating: float | None
     genres: list[str]
-    release_year: str | None
+    release_year: int | None
 
 
 async def search_tmdb(query: str, media_type: str | None = None) -> list[TMDBResult]:
@@ -61,7 +61,7 @@ async def search_tmdb(query: str, media_type: str | None = None) -> list[TMDBRes
                 overview=item.get("overview") or "",
                 tmdb_rating=round(item["vote_average"], 1) if item.get("vote_average") else None,
                 genres=[],  # genre_ids only has id, which needs to be checked separately; leave it blank first and can be expanded later.
-                release_year=date[:4] if date else None,
+                release_year=int(date[:4]) if len(date) >= 4 else None,
             )
         )
 
