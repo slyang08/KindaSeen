@@ -1,4 +1,4 @@
-// src/features/auth/Header.tsx
+// src/features/header/Header.tsx
 "use client"
 
 import Link from "next/link"

@@ -1,4 +1,4 @@
-// apps/web/src/components/records/RecordCard.tsx
+// apps/web/src/features/records/RecordCard.tsx
 import type { Record as MediaRecord } from "@kindaseen/shared"
 import { Pencil, Trash2 } from "lucide-react"
 

@@ -1,4 +1,4 @@
-// apps/web/src/components/records/RecordList.tsx
+// apps/web/src/features/records/RecordList.tsx
 import type { Record as MediaRecord } from "@kindaseen/shared"
 
 import { RecordCard } from "@/features/records/RecordCard"
