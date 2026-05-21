@@ -26,7 +26,20 @@ export function Header() {
               {user ? (
                 <>
                   {/* Header search, after selection, it will be directed to the records page with query */}
-                  <SearchDialog onSelect={() => router.push("/records")} />
+                  <SearchDialog
+                    onSelect={(result) => {
+                      const params = new URLSearchParams({
+                        tmdb_id: String(result.tmdb_id),
+                        title: result.title,
+                        media_type: result.media_type,
+                        overview: result.overview ?? "",
+                        tmdb_rating: String(result.tmdb_rating ?? ""),
+                        poster_url: result.poster_url ?? "",
+                        release_year: result.release_year ?? "",
+                      })
+                      router.push(`/records?${params}`)
+                    }}
+                  />
                   <span className="text-sm text-muted-foreground">
                     Hi, {user.email?.split("@")[0].replace(/^./, (c) => c.toUpperCase())}
                   </span>
