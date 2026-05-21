@@ -1,6 +1,9 @@
 # KindaSeen
 
-Keep track of the videos you've watched — you'll never forget them again.
+> Track everything you've watched — movies, varieties, dramas, anime, manga, and more.  
+> Never lose track of where you left off again.
+
+🔗 [KindaSeen Website](https://kindaseen.vercel.app)
 
 ## Structure
 
@@ -9,7 +12,8 @@ KindaSeen/
 ├── apps/
 │   ├── web/          # Next.js (port 3000)
 │   └── api/          # FastAPI (port 8000)
-└── packages/         # Shared
+└── packages/
+    └── shared/       # Shared types
 ```
 
 ## Development
@@ -29,21 +33,41 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Starts both frontend and backend
+### 3. Environment variables
 
 ```bash
-# Execute in root
+# apps/api/.env
+DATABASE_URL=your_supabase_db_url
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+TMDB_API_TOKEN=your_tmdb_bearer_token
+
+# apps/web/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 4. Start both frontend and backend
+
+```bash
+# Run from root
 pnpm dev
 ```
 
-Next.js：http://localhost:3000
-FastAPI：http://localhost:8000
+Next.js：http://localhost:3000  
+FastAPI：http://localhost:8000  
 API Doc：http://localhost:8000/docs
 
 ## Tech Stack
 
-- **FrontEnd**: Next.js 15, TypeScript
+- **FrontEnd**: Next.js 16, TypeScript
 - **BackEnd**: FastAPI, SQLAlchemy (async), Alembic
-- **Database**: PostgreSQL + pgvector
-- **AI**: OpenAI Embeddings（Planning）
-- **Video Searching**: TMDB API（Planning）
+- **Database**: Supabase (PostgreSQL)
+- **Search**: TMDB API
+- **AI**: OpenAI Embeddings（planned）
+
+## Deployment
+
+- Frontend: Vercel
+- Backend: Docker, Render

@@ -30,6 +30,7 @@ const schema = z.object({
   title: z.string().min(1),
   media_type: z.enum([...MEDIA_TYPES]),
   status: z.enum([...STATUSES]),
+  release_year: z.number().nullable().optional(),
   season: z.number().min(1, "at least to be 1"),
   episode: z.number().min(1, "at least to be 1"),
   rating: z.number().nullable().optional(),
@@ -64,6 +65,7 @@ export function RecordForm({
       title: initialValues?.title ?? "",
       media_type: initialValues?.media_type,
       status: initialValues?.status,
+      release_year: initialValues?.release_year ?? null,
       season: initialValues?.season ?? 1,
       episode: initialValues?.episode ?? 1,
       rating: initialValues?.rating ?? null,
@@ -76,6 +78,7 @@ export function RecordForm({
       title: initialValues?.title ?? "",
       media_type: initialValues?.media_type,
       status: initialValues?.status,
+      release_year: initialValues?.release_year ?? null,
       season: initialValues?.season ?? 1,
       episode: initialValues?.episode ?? 1,
       rating: initialValues?.rating ?? null,
@@ -103,6 +106,7 @@ export function RecordForm({
       title: values.title,
       media_type: values.media_type,
       status: values.status,
+      release_year: values.release_year ?? null,
       season: values.season,
       episode: values.episode,
       rating: values.rating ?? null,
@@ -151,6 +155,20 @@ export function RecordForm({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Release Year */}
+      <div className="space-y-1">
+        <Label>Year</Label>
+        <Input
+          type="number"
+          placeholder="e.g. 2004"
+          readOnly={!!initialValues?.release_year}
+          className={initialValues?.release_year ? "bg-muted text-muted-foreground" : ""}
+          {...register("release_year", {
+            setValueAs: (v) => (v === "" ? null : Number(v)),
+          })}
+        />
       </div>
 
       {/* Season */}
