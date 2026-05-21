@@ -1,9 +1,9 @@
 // apps/web/src/app/records/page.tsx
 "use client"
 
-import type { Record as MediaRecord } from "@kindaseen/shared"
-import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import type { Record as MediaRecord, RecordCreate } from "@kindaseen/shared"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useCallback, useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
@@ -12,6 +12,38 @@ import { RecordList } from "@/features/records/RecordList"
 import { recordsApi } from "@/lib/records"
 
 type DialogMode = "create" | "edit"
+
+// useSearchParams() must be within Suspense, so it's a separate sub-component
+function TMDBQueryHandler({
+  onTMDBFromUrl,
+}: {
+  onTMDBFromUrl: (data: Partial<RecordCreate>) => void
+}) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const tmdb_id = searchParams.get("tmdb_id")
+    if (!tmdb_id) return
+
+    const fromUrl: Partial<RecordCreate> = {
+      tmdb_id: Number(tmdb_id),
+      title: searchParams.get("title") ?? "",
+      overview: searchParams.get("overview") ?? "",
+      tmdb_rating: searchParams.get("tmdb_rating") ? Number(searchParams.get("tmdb_rating")) : null,
+      poster_url: searchParams.get("poster_url") || null,
+      genres: [],
+    }
+
+    setTimeout(() => {
+      onTMDBFromUrl(fromUrl)
+    }, 0)
+
+    router.replace("/records")
+  }, [searchParams, router, onTMDBFromUrl])
+
+  return null
+}
 
 export default function RecordsPage() {
   const { user, loading } = useAuth()
@@ -26,6 +58,7 @@ export default function RecordsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<DialogMode>("create")
   const [selectedRecord, setSelectedRecord] = useState<MediaRecord | null>(null)
+  const [pendingTMDB, setPendingTMDB] = useState<Partial<RecordCreate> | null>(null)
 
   // ======================
   // Helpers
@@ -67,7 +100,7 @@ export default function RecordsPage() {
 
   const handleDelete = async (id: string) => {
     await recordsApi.delete(id)
-    setRecords((prev) => prev.filter((r) => r.id !== id))
+    setRecords((prev) => prev.filter((res) => res.id !== id))
   }
 
   // ======================
@@ -77,6 +110,7 @@ export default function RecordsPage() {
   const openCreateDialog = () => {
     setDialogMode("create")
     setSelectedRecord(null)
+    setPendingTMDB(null)
     setDialogOpen(true)
   }
 
@@ -91,6 +125,7 @@ export default function RecordsPage() {
 
     if (!open) {
       setSelectedRecord(null)
+      setPendingTMDB(null)
     }
   }
 
@@ -105,6 +140,16 @@ export default function RecordsPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
+      {/* Handle TMDB query string resulting from header search */}
+      <Suspense fallback={null}>
+        <TMDBQueryHandler
+          onTMDBFromUrl={(data) => {
+            setPendingTMDB(data)
+            setDialogOpen(true)
+          }}
+        />
+      </Suspense>
+
       {/* Header Actions */}
       <div className="flex justify-between items-center">
         <Button onClick={openCreateDialog}>Add Record</Button>
@@ -123,7 +168,7 @@ export default function RecordsPage() {
         onOpenChange={closeDialog}
         title={dialogMode === "create" ? "Add Record" : "Edit Record"}
         readonlyTitle={dialogMode === "edit"}
-        initialValues={selectedRecord ?? undefined}
+        initialValues={pendingTMDB ?? selectedRecord ?? undefined}
         onSubmit={handleSubmit}
       />
     </div>

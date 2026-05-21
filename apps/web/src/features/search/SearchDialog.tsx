@@ -30,7 +30,10 @@ export function SearchDialog({ onSelect }: Props) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
+        <DialogContent
+          className="sm:max-w-2xl top-[12vh] translate-y-0 p-4 overflow-visible"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>Search</DialogTitle>
           </DialogHeader>

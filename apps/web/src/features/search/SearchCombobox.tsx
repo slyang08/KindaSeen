@@ -59,23 +59,23 @@ export function SearchCombobox({
       </div>
 
       {(results.length > 0 || loading) && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-80 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md max-h-[70vh] overflow-y-auto">
           {loading && <div className="px-4 py-3 text-sm text-muted-foreground">Searching...</div>}
           {!loading &&
-            results.map((r) => (
+            results.map((result) => (
               <button
-                key={r.tmdb_id}
+                key={result.tmdb_id}
                 type="button"
                 onClick={() => {
-                  onSelect(r)
+                  onSelect(result)
                   setResults([])
                 }}
                 className="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-accent transition-colors"
               >
-                {r.poster_url ? (
+                {result.poster_url ? (
                   <Image
-                    src={r.poster_url}
-                    alt={r.title}
+                    src={result.poster_url}
+                    alt={result.title}
                     width={64}
                     height={96}
                     className="h-24 w-16 object-cover rounded shrink-0"
@@ -84,11 +84,11 @@ export function SearchCombobox({
                   <div className="h-12 w-8 bg-muted rounded shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{r.title}</p>
+                  <p className="text-sm font-medium truncate">{result.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {r.media_type === "movie" ? "Movie" : "TV"}
-                    {r.release_year ? ` · ${r.release_year}` : ""}
-                    {r.tmdb_rating ? ` · ★ ${r.tmdb_rating}` : ""}
+                    {result.media_type === "movie" ? "Movie" : "TV"}
+                    {result.release_year ? ` · ${result.release_year}` : ""}
+                    {result.tmdb_rating ? ` · ★ ${result.tmdb_rating}` : ""}
                   </p>
                 </div>
               </button>
