@@ -26,6 +26,8 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 
+import { GenresField } from "./GenresField"
+
 const schema = z.object({
   title: z.string().min(1),
   media_type: z.enum([...MEDIA_TYPES]),
@@ -34,6 +36,7 @@ const schema = z.object({
   season: z.number().min(1, "at least to be 1"),
   episode: z.number().min(1, "at least to be 1"),
   rating: z.number().nullable().optional(),
+  genres: z.array(z.string()).default([]),
   notes: z.string().nullable().optional(),
 })
 
@@ -44,6 +47,8 @@ type Props = {
   onSubmit: (data: RecordCreate) => Promise<void>
   readonlyTitle?: boolean
   submitLabel?: string
+  fromTMDB?: boolean
+  hasTMDBGenres?: boolean
 }
 
 export function RecordForm({
@@ -51,6 +56,8 @@ export function RecordForm({
   onSubmit,
   readonlyTitle = false,
   submitLabel = "Save",
+  fromTMDB,
+  hasTMDBGenres,
 }: Props) {
   const {
     register,
@@ -69,6 +76,7 @@ export function RecordForm({
       season: initialValues?.season ?? 1,
       episode: initialValues?.episode ?? 1,
       rating: initialValues?.rating ?? null,
+      genres: initialValues?.genres ?? [],
       notes: initialValues?.notes ?? "",
     },
   })
@@ -82,6 +90,7 @@ export function RecordForm({
       season: initialValues?.season ?? 1,
       episode: initialValues?.episode ?? 1,
       rating: initialValues?.rating ?? null,
+      genres: initialValues?.genres ?? [],
       notes: initialValues?.notes ?? "",
     })
   }, [initialValues, reset])
@@ -110,6 +119,7 @@ export function RecordForm({
       season: values.season,
       episode: values.episode,
       rating: values.rating ?? null,
+      genres: values.genres ?? [],
       notes: values.notes ?? null,
     })
   }
@@ -215,6 +225,14 @@ export function RecordForm({
           })}
         />
       </div>
+
+      {/* Genres */}
+      <GenresField
+        value={useWatch({ control, name: "genres" }) ?? []}
+        onChange={(genres) => setValue("genres", genres)}
+        fromTMDB={fromTMDB ?? false}
+        hasTMDBGenres={hasTMDBGenres ?? false}
+      />
 
       {/* Notes */}
       <div className="space-y-1">

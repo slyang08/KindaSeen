@@ -1,3 +1,4 @@
+export * from "./GenresField"
 export * from "./RecordCard"
 export * from "./RecordForm"
 export * from "./RecordFormDialog"

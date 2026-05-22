@@ -10,7 +10,7 @@
     "lint:fix": "eslint --fix"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
+    "@hookform/resolvers": "^3.10.0",
     "@kindaseen/database": "workspace:^",
     "@kindaseen/shared": "workspace:^",
     "@supabase/ssr": "^0.10.3",

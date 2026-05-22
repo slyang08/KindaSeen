@@ -30,6 +30,9 @@ export function RecordFormDialog({
   initialValues,
   onSubmit,
 }: Props) {
+  const fromTMDB = !!initialValues?.tmdb_id
+  const hasTMDBGenres = !!(initialValues?.genres && initialValues.genres.length > 0)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -39,12 +42,21 @@ export function RecordFormDialog({
         </DialogHeader>
 
         <RecordForm
-          initialValues={initialValues}
+          initialValues={
+            initialValues
+              ? {
+                  ...initialValues,
+                  genres: initialValues.genres ?? [],
+                }
+              : undefined
+          }
           onSubmit={async (data) => {
             await onSubmit(data)
             onOpenChange(false)
           }}
           readonlyTitle={readonlyTitle}
+          fromTMDB={fromTMDB}
+          hasTMDBGenres={hasTMDBGenres}
         />
       </DialogContent>
     </Dialog>
