@@ -32,7 +32,9 @@ function TMDBQueryHandler({
       overview: searchParams.get("overview") ?? "",
       tmdb_rating: searchParams.get("tmdb_rating") ? Number(searchParams.get("tmdb_rating")) : null,
       poster_url: searchParams.get("poster_url") || null,
-      genres: [],
+      genres: searchParams.get("genres")
+        ? searchParams.get("genres")!.split(",").filter(Boolean)
+        : [],
       release_year: searchParams.get("release_year")
         ? Number(searchParams.get("release_year"))
         : null,

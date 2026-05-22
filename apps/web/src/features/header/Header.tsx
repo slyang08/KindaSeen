@@ -36,6 +36,7 @@ export function Header() {
                         tmdb_rating: String(result.tmdb_rating ?? ""),
                         poster_url: result.poster_url ?? "",
                         release_year: result.release_year ?? "",
+                        genres: result.genres.join(","),
                       })
                       router.push(`/records?${params}`)
                     }}
