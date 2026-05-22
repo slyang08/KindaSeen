@@ -38,6 +38,10 @@ const schema = z.object({
   rating: z.number().nullable().optional(),
   genres: z.array(z.string()).default([]),
   notes: z.string().nullable().optional(),
+  tmdb_id: z.number().nullable().optional(),
+  poster_url: z.string().nullable().optional(),
+  overview: z.string().nullable().optional(),
+  tmdb_rating: z.number().nullable().optional(),
 })
 
 export type RecordFormValues = z.infer<typeof schema>
@@ -78,6 +82,10 @@ export function RecordForm({
       rating: initialValues?.rating ?? null,
       genres: initialValues?.genres ?? [],
       notes: initialValues?.notes ?? "",
+      tmdb_id: initialValues?.tmdb_id ?? null,
+      poster_url: initialValues?.poster_url ?? null,
+      overview: initialValues?.overview ?? null,
+      tmdb_rating: initialValues?.tmdb_rating ?? null,
     },
   })
 
@@ -92,6 +100,10 @@ export function RecordForm({
       rating: initialValues?.rating ?? null,
       genres: initialValues?.genres ?? [],
       notes: initialValues?.notes ?? "",
+      tmdb_id: initialValues?.tmdb_id ?? null,
+      poster_url: initialValues?.poster_url ?? null,
+      overview: initialValues?.overview ?? null,
+      tmdb_rating: initialValues?.tmdb_rating ?? null,
     })
   }, [initialValues, reset])
 
@@ -121,6 +133,10 @@ export function RecordForm({
       rating: values.rating ?? null,
       genres: values.genres ?? [],
       notes: values.notes ?? null,
+      tmdb_id: values.tmdb_id ?? null,
+      poster_url: values.poster_url ?? null,
+      overview: values.overview ?? null,
+      tmdb_rating: values.tmdb_rating ?? null,
     })
   }
 
