@@ -28,17 +28,14 @@ export function Header() {
                   {/* Header search, after selection, it will be directed to the records page with query */}
                   <SearchDialog
                     onSelect={(result) => {
-                      const params = new URLSearchParams({
-                        tmdb_id: String(result.tmdb_id),
-                        title: result.title,
-                        media_type: result.media_type,
-                        overview: result.overview ?? "",
-                        tmdb_rating: String(result.tmdb_rating ?? ""),
-                        poster_url: result.poster_url ?? "",
-                        release_year: result.release_year ?? "",
-                        genres: result.genres.join(","),
-                      })
-                      router.push(`/records?${params}`)
+                      if (window.location.pathname === "/records") {
+                        // Already on the records page, dispatch event directly
+                        window.dispatchEvent(new CustomEvent("tmdb:selected", { detail: result }))
+                      } else {
+                        // Not on the records page, save to sessionStorage before redirecting
+                        sessionStorage.setItem("pendingTMDB", JSON.stringify(result))
+                        router.push("/records")
+                      }
                     }}
                   />
                   <span className="text-sm text-muted-foreground">
