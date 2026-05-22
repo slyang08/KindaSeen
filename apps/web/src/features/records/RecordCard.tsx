@@ -1,5 +1,5 @@
 // apps/web/src/features/records/RecordCard.tsx
-import type { Record as MediaRecord } from "@kindaseen/shared"
+import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
 import { Pencil, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -10,28 +10,11 @@ type Props = {
   onDelete: (id: string) => void
 }
 
-const MEDIA_TYPE_LABELS: Record<string, string> = {
-  movie: "Movie",
-  drama: "Drama",
-  anime: "Anime",
-  variety: "Variety",
-  manga: "Manga",
-  novel: "Novel",
-  podcast: "Podcast",
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  completed: "Completed",
-  watching: "Watching",
-  dropped: "Dropped",
-  want_to_watch: "Want to Watch",
-}
-
 export function RecordCard({ record, onEdit, onDelete }: Props) {
   const meta = [
     MEDIA_TYPE_LABELS[record.media_type],
     STATUS_LABELS[record.status],
-    record.season != null ? `S ${record.season}` : null,
+    record.season > 1 ? `S${record.season}` : null,
     record.episode != null ? `EP ${record.episode}` : null,
     record.rating != null ? `${record.rating}/10` : null,
   ]

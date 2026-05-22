@@ -17,3 +17,20 @@ export const STATUSES = [
   "want_to_watch",
 ] as const;
 export type Status = (typeof STATUSES)[number];
+
+export const MEDIA_TYPE_LABELS: Record<MediaType, string> = {
+  movie: "Movie",
+  drama: "Drama",
+  anime: "Anime",
+  variety: "Variety",
+  manga: "Manga",
+  novel: "Novel",
+  podcast: "Podcast",
+};
+
+export const STATUS_LABELS: Record<Status, string> = {
+  completed: "Completed",
+  watching: "Watching",
+  dropped: "Dropped",
+  want_to_watch: "Want to Watch",
+};

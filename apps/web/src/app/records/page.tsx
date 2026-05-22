@@ -1,9 +1,9 @@
 // apps/web/src/app/records/page.tsx
 "use client"
 
-import type { Record as MediaRecord, RecordCreate } from "@kindaseen/shared"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Suspense, useCallback, useEffect, useState } from "react"
+import type { Record as MediaRecord, RecordCreate, TMDBSearchResult } from "@kindaseen/shared"
+import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
@@ -13,41 +13,16 @@ import { recordsApi } from "@/lib/records"
 
 type DialogMode = "create" | "edit"
 
-// useSearchParams() must be within Suspense, so it's a separate sub-component
-function TMDBQueryHandler({
-  onTMDBFromUrl,
-}: {
-  onTMDBFromUrl: (data: Partial<RecordCreate>) => void
-}) {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-
-  useEffect(() => {
-    const tmdb_id = searchParams.get("tmdb_id")
-    if (!tmdb_id) return
-
-    const fromUrl: Partial<RecordCreate> = {
-      tmdb_id: Number(tmdb_id),
-      title: searchParams.get("title") ?? "",
-      overview: searchParams.get("overview") ?? "",
-      tmdb_rating: searchParams.get("tmdb_rating") ? Number(searchParams.get("tmdb_rating")) : null,
-      poster_url: searchParams.get("poster_url") || null,
-      genres: searchParams.get("genres")
-        ? searchParams.get("genres")!.split(",").filter(Boolean)
-        : [],
-      release_year: searchParams.get("release_year")
-        ? Number(searchParams.get("release_year"))
-        : null,
-    }
-
-    setTimeout(() => {
-      onTMDBFromUrl(fromUrl)
-    }, 0)
-
-    router.replace("/records")
-  }, [searchParams, router, onTMDBFromUrl])
-
-  return null
+function parseTMDBResult(result: TMDBSearchResult): Partial<RecordCreate> {
+  return {
+    tmdb_id: result.tmdb_id,
+    title: result.title,
+    overview: result.overview ?? "",
+    tmdb_rating: result.tmdb_rating ?? null,
+    poster_url: result.poster_url ?? null,
+    genres: result.genres ?? [],
+    release_year: result.release_year ? Number(result.release_year) : null,
+  }
 }
 
 export default function RecordsPage() {
@@ -75,19 +50,6 @@ export default function RecordsPage() {
   }, [])
 
   // ======================
-  // Load data
-  // ======================
-
-  useEffect(() => {
-    if (loading) return
-    if (!user) {
-      router.push("/login")
-      return
-    }
-    recordsApi.getAll().then(setRecords).catch(console.error)
-  }, [user, loading, router])
-
-  // ======================
   // Actions
   // ======================
 
@@ -111,6 +73,46 @@ export default function RecordsPage() {
   const handleTMDBFromUrl = useCallback((data: Partial<RecordCreate>) => {
     setPendingTMDB(data)
     setDialogOpen(true)
+  }, [])
+
+  // ======================
+  // Load data
+  // ======================
+
+  useEffect(() => {
+    if (loading) return
+    if (!user) {
+      router.push("/login")
+      return
+    }
+
+    const raw = sessionStorage.getItem("pendingTMDB")
+    if (raw) {
+      sessionStorage.removeItem("pendingTMDB")
+      try {
+        setTimeout(() => {
+          setDialogMode("create")
+          setPendingTMDB(parseTMDBResult(JSON.parse(raw)))
+          setDialogOpen(true)
+        }, 0)
+      } catch {
+        console.error("Failed to parse pendingTMDB")
+      }
+    }
+
+    recordsApi.getAll().then(setRecords).catch(console.error)
+  }, [user, loading, router, handleTMDBFromUrl])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const result = (e as CustomEvent).detail
+      setDialogMode("create")
+      setPendingTMDB(parseTMDBResult(result))
+      setDialogOpen(true)
+    }
+
+    window.addEventListener("tmdb:selected", handler)
+    return () => window.removeEventListener("tmdb:selected", handler)
   }, [])
 
   // ======================
@@ -150,11 +152,6 @@ export default function RecordsPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-      {/* Handle TMDB query string resulting from header search */}
-      <Suspense fallback={null}>
-        <TMDBQueryHandler onTMDBFromUrl={handleTMDBFromUrl} />
-      </Suspense>
-
       {/* Header Actions */}
       <div className="flex justify-between items-center">
         <Button onClick={openCreateDialog}>Add Record</Button>
