@@ -1,6 +1,7 @@
 export * from "./button"
 export * from "./card"
 export * from "./dialog"
+export * from "./dropdown-menu"
 export * from "./field"
 export * from "./input"
 export * from "./input-group"
