@@ -1,9 +1,17 @@
 // apps/web/src/features/records/RecordCard.tsx
-import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
-import { Pencil, Trash2 } from "lucide-react"
-import Image from "next/image"
+"use client"
 
-import { Button } from "@/components/ui/button"
+import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
+import { MoreVertical, Pencil, Trash2 } from "lucide-react"
+import Image from "next/image"
+import { useState } from "react"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Props = {
   record: MediaRecord
@@ -11,13 +19,24 @@ type Props = {
   onDelete: (id: string) => void
 }
 
+const STATUS_COLORS: Record<string, string> = {
+  watching: "text-blue-500",
+  completed: "text-green-500",
+  dropped: "text-red-500",
+  want_to_watch: "text-muted-foreground",
+}
+
 export function RecordCard({ record, onEdit, onDelete }: Props) {
-  const meta = [
-    MEDIA_TYPE_LABELS[record.media_type],
-    STATUS_LABELS[record.status],
+  const [expanded, setExpanded] = useState(false)
+
+  const title = record.release_year ? `${record.title} (${record.release_year})` : record.title
+
+  const statusColor = STATUS_COLORS[record.status] ?? "text-muted-foreground"
+
+  const watchMeta = [
     record.season > 1 ? `S${record.season}` : null,
     record.episode != null ? `EP ${record.episode}` : null,
-    record.rating != null ? `${record.rating}/10` : null,
+    record.rating != null ? `★ ${record.rating}/10` : null,
   ]
     .filter(Boolean)
     .join(" · ")
@@ -29,9 +48,9 @@ export function RecordCard({ record, onEdit, onDelete }: Props) {
       : null
 
   return (
-    <div className="flex items-start justify-between p-4 border rounded-lg gap-4">
+    <div className="flex items-start gap-3 p-4 border rounded-lg">
       {/* Poster */}
-      <div className="shrink-0 w-16 h-24 rounded overflow-hidden bg-muted flex items-center justify-center">
+      <div className="shrink-0 w-14 h-20 sm:w-16 sm:h-24 rounded overflow-hidden bg-muted flex items-center justify-center">
         {record.poster_url ? (
           <Image
             src={record.poster_url}
@@ -42,35 +61,82 @@ export function RecordCard({ record, onEdit, onDelete }: Props) {
           />
         ) : (
           <span className="text-xs text-muted-foreground text-center leading-tight px-1">
-            No image available.
+            暫無圖片
           </span>
         )}
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-1 min-w-0">
-        <p className="font-medium truncate">{record.title}</p>
-        <p className="text-sm text-muted-foreground">{meta}</p>
+      <div className="flex-1 min-w-0 space-y-1">
+        {/* Row 1: Title + Media Type badge + ... menu */}
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-medium leading-snug">{title}</p>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-xs border rounded px-1.5 py-0.5 text-muted-foreground">
+              {MEDIA_TYPE_LABELS[record.media_type]}
+            </span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-0.5 rounded hover:bg-muted transition-colors">
+                  <MoreVertical className="size-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(record)}>
+                  <Pencil className="size-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(record.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Row 2: Status (colored) + watch meta */}
+        <p className="text-sm">
+          <span className={statusColor}>{STATUS_LABELS[record.status]}</span>
+          {watchMeta && <span className="text-muted-foreground"> · {watchMeta}</span>}
+        </p>
+
+        {/* Row 3: Genres */}
         {record.genres && record.genres.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5">
             {record.genres.map((genre) => (
-              <span key={genre} className="text-xs bg-muted px-1.5 py-0.5 rounded">
+              <span key={genre} className="text-xs text-muted-foreground">
                 {genre}
               </span>
             ))}
           </div>
         )}
-        {displayText && <p className="text-sm text-muted-foreground line-clamp-2">{displayText}</p>}
-      </div>
 
-      {/* Actions */}
-      <div className="flex flex-col lg:flex-row gap-2 shrink-0">
-        <Button variant="outline" size="sm" onClick={() => onEdit(record)}>
-          <Pencil className="size-4" />
-        </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(record.id)}>
-          <Trash2 className="size-4" />
-        </Button>
+        {/* Row 4: Note / Overview */}
+        {displayText && (
+          <div>
+            <p
+              className={
+                expanded
+                  ? "text-xs text-muted-foreground/70"
+                  : "text-xs text-muted-foreground/70 line-clamp-1 sm:line-clamp-2"
+              }
+            >
+              {displayText}
+            </p>
+            {displayText.length > 80 && (
+              <button
+                onClick={() => setExpanded((prev) => !prev)}
+                className="text-xs text-muted-foreground underline mt-0.5"
+              >
+                {expanded ? "Show less" : "Show more"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,7 +1,18 @@
 // apps/web/src/features/records/RecordList.tsx
+"use client"
+
 import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
+import { SlidersHorizontal } from "lucide-react"
 import { useMemo, useState } from "react"
 
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -19,13 +30,96 @@ type Props = {
   onDelete: (id: string) => void
 }
 
+function FilterControls({
+  statusFilter,
+  setStatusFilter,
+  mediaTypeFilter,
+  setMediaTypeFilter,
+  genreFilter,
+  setGenreFilter,
+  sortKey,
+  setSortKey,
+  allGenres,
+}: {
+  statusFilter: string
+  setStatusFilter: (v: string) => void
+  mediaTypeFilter: string
+  setMediaTypeFilter: (v: string) => void
+  genreFilter: string
+  setGenreFilter: (v: string) => void
+  sortKey: SortKey
+  setSortKey: (v: SortKey) => void
+  allGenres: string[]
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-full sm:w-36">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            <SelectItem key={value} value={value}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={mediaTypeFilter} onValueChange={setMediaTypeFilter}>
+        <SelectTrigger className="w-full sm:w-36">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          {Object.entries(MEDIA_TYPE_LABELS).map(([value, label]) => (
+            <SelectItem key={value} value={value}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {allGenres.length > 0 && (
+        <Select value={genreFilter} onValueChange={setGenreFilter}>
+          <SelectTrigger className="w-full sm:w-36">
+            <SelectValue placeholder="Genre" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Genres</SelectItem>
+            {allGenres.map((genre) => (
+              <SelectItem key={genre} value={genre}>
+                {genre}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+        <SelectTrigger className="w-full sm:w-40">
+          <SelectValue placeholder="Sort" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="created_at_desc">Newest First</SelectItem>
+          <SelectItem value="created_at_asc">Oldest First</SelectItem>
+          <SelectItem value="rating_desc">Highest Rated</SelectItem>
+          <SelectItem value="rating_asc">Lowest Rated</SelectItem>
+          <SelectItem value="title_asc">Title A→Z</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
 export function RecordList({ records, onEdit, onDelete }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [mediaTypeFilter, setMediaTypeFilter] = useState<string>("all")
   const [genreFilter, setGenreFilter] = useState<string>("all")
   const [sortKey, setSortKey] = useState<SortKey>("created_at_desc")
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false)
 
-  // Collect all unique genres from records
   const allGenres = useMemo(() => {
     const set = new Set<string>()
     records.forEach((r) => r.genres?.forEach((g) => set.add(g)))
@@ -53,67 +147,59 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
       })
   }, [records, statusFilter, mediaTypeFilter, genreFilter, sortKey])
 
+  const activeFilterCount = [
+    statusFilter !== "all",
+    mediaTypeFilter !== "all",
+    genreFilter !== "all",
+  ].filter(Boolean).length
+
+  const filterProps = {
+    statusFilter,
+    setStatusFilter,
+    mediaTypeFilter,
+    setMediaTypeFilter,
+    genreFilter,
+    setGenreFilter,
+    sortKey,
+    setSortKey,
+    allGenres,
+  }
+
   return (
     <div className="space-y-4">
-      {/* Filters + Sort */}
-      <div className="flex flex-wrap gap-2">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={mediaTypeFilter} onValueChange={setMediaTypeFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {Object.entries(MEDIA_TYPE_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {allGenres.length > 0 && (
-          <Select value={genreFilter} onValueChange={setGenreFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Genres</SelectItem>
-              {allGenres.map((genre) => (
-                <SelectItem key={genre} value={genre}>
-                  {genre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Sort" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="created_at_desc">Newest First</SelectItem>
-            <SelectItem value="created_at_asc">Oldest First</SelectItem>
-            <SelectItem value="rating_desc">Highest Rated</SelectItem>
-            <SelectItem value="rating_asc">Lowest Rated</SelectItem>
-            <SelectItem value="title_asc">Title A→Z</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Desktop filters */}
+      <div className="hidden sm:block">
+        <FilterControls {...filterProps} />
       </div>
+
+      {/* Mobile filter button */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setFilterDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <SlidersHorizontal className="size-4" />
+          Filter & Sort
+          {activeFilterCount > 0 && (
+            <span className="bg-primary text-primary-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {/* Mobile filter dialog */}
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Filter & Sort</DialogTitle>
+            <DialogDescription>Filter and sort your records.</DialogDescription>
+          </DialogHeader>
+          <FilterControls {...filterProps} />
+        </DialogContent>
+      </Dialog>
 
       {/* Results */}
       {filtered.length === 0 ? (
