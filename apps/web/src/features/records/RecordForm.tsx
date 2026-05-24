@@ -152,7 +152,10 @@ export function RecordForm({
       {/* Media Type */}
       <div className="space-y-1">
         <Label>Media Type</Label>
-        <Select onValueChange={(value) => setValue("media_type", value as MediaType)}>
+        <Select
+          value={useWatch({ control, name: "media_type" }) ?? ""}
+          onValueChange={(value) => setValue("media_type", value as MediaType)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
@@ -169,7 +172,10 @@ export function RecordForm({
       {/* Status */}
       <div className="space-y-1">
         <Label>Status</Label>
-        <Select onValueChange={(value) => setValue("status", value as Status)}>
+        <Select
+          value={useWatch({ control, name: "status" }) ?? ""}
+          onValueChange={(value) => setValue("status", value as Status)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
