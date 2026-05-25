@@ -1,16 +1,53 @@
 // apps/web/src/lib/api.ts
 import { supabase } from "@/lib/supabase"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+
+async function getToken(): Promise<string | null> {
+  const { data, error } = await supabase.auth.getSession()
+  if (error || !data.session) return null
+
+  // If token expires in 60 seconds, refresh it
+  const expiresAt = data.session.expires_at ?? 0
+  const now = Math.floor(Date.now() / 1000)
+
+  if (expiresAt - now < 60) {
+    const { data: refreshed } = await supabase.auth.refreshSession()
+    return refreshed.session?.access_token ?? null
+  }
+
+  return data.session.access_token
+}
+
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const { data } = await supabase.auth.getSession()
+  const token = await getToken()
 
-  const token = data.session?.access_token
+  if (!token) {
+    await supabase.auth.signOut()
+    window.location.href = "/login"
+    throw new Error("No token")
+  }
 
-  return fetch(url, {
+  const res = await fetch(`${API_URL}${url}`, {
     ...options,
     headers: {
-      ...(options.headers || {}),
+      "Content-Type": "application/json",
+      ...(options.headers ?? {}),
       Authorization: `Bearer ${token}`,
     },
   })
+
+  if (res.status === 401) {
+    await supabase.auth.signOut()
+    window.location.href = "/login"
+    throw new Error("Unauthorized")
+  }
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Unknown error" }))
+    throw new Error(error.detail ?? "Request failed")
+  }
+
+  if (res.status === 204) return null
+  return res.json()
 }

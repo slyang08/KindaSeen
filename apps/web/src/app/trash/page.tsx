@@ -1,34 +1,27 @@
 // apps/web/src/app/trash/page.tsx
 "use client"
 
-import type { Record as MediaRecord } from "@kindaseen/shared"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
-import { recordsApi } from "@/lib/records"
+import { useDeletedRecords, useRestoreRecord } from "@/features/records/queries"
 
 export default function TrashPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [records, setRecords] = useState<MediaRecord[]>([])
 
-  useEffect(() => {
-    if (loading) return
-    if (!user) {
-      router.push("/login")
-      return
-    }
-    recordsApi.getDeleted().then(setRecords).catch(console.error)
-  }, [user, loading, router])
+  const { data: records = [] } = useDeletedRecords()
+  const restoreRecord = useRestoreRecord()
 
   if (loading) return null
-  if (!user) return null
+  if (!user) {
+    router.push("/login")
+    return null
+  }
 
-  const handleRestore = async (id: string) => {
-    await recordsApi.restore(id)
-    setRecords((prev) => prev.filter((r) => r.id !== id))
+  const handleRestore = (id: string) => {
+    restoreRecord.mutate(id)
   }
 
   return (
@@ -62,7 +55,12 @@ export default function TrashPage() {
                 </p>
               )}
             </div>
-            <Button variant="outline" size="sm" onClick={() => handleRestore(record.id)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleRestore(record.id)}
+              disabled={restoreRecord.isPending}
+            >
               Restore
             </Button>
           </div>
