@@ -44,6 +44,9 @@ export function Header() {
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/records">My Records</Link>
                   </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/statistics">Statistics</Link>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
