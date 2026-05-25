@@ -3,13 +3,17 @@
 
 import type { Record as MediaRecord, RecordCreate, TMDBSearchResult } from "@kindaseen/shared"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
-import { RecordFormDialog } from "@/features/records/RecordFormDialog"
-import { RecordList } from "@/features/records/RecordList"
-import { recordsApi } from "@/lib/records"
+import { RecordFormDialog, RecordList } from "@/features/records"
+import {
+  useCreateRecord,
+  useDeleteRecord,
+  useRecords,
+  useUpdateRecord,
+} from "@/features/records/queries"
 
 type DialogMode = "create" | "edit"
 
@@ -33,7 +37,10 @@ export default function RecordsPage() {
   // State hierarchy (important)
   // ======================
 
-  const [records, setRecords] = useState<MediaRecord[]>([])
+  const { data: records = [] } = useRecords()
+  const createRecord = useCreateRecord()
+  const updateRecord = useUpdateRecord()
+  const deleteRecord = useDeleteRecord()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<DialogMode>("create")
@@ -41,50 +48,11 @@ export default function RecordsPage() {
   const [pendingTMDB, setPendingTMDB] = useState<Partial<RecordCreate> | null>(null)
 
   // ======================
-  // Helpers
-  // ======================
-
-  const refreshRecords = useCallback(async () => {
-    const data = await recordsApi.getAll()
-    setRecords(data)
-  }, [])
-
-  // ======================
-  // Actions
-  // ======================
-
-  const handleCreate = async (data: Parameters<typeof recordsApi.create>[0]) => {
-    await recordsApi.create(data)
-    await refreshRecords()
-  }
-
-  const handleUpdate = async (data: Parameters<typeof recordsApi.create>[0]) => {
-    if (!selectedRecord) return
-    await recordsApi.update(selectedRecord.id, data)
-    setSelectedRecord(null)
-    await refreshRecords()
-  }
-
-  const handleDelete = async (id: string) => {
-    await recordsApi.delete(id)
-    setRecords((prev) => prev.filter((res) => res.id !== id))
-  }
-
-  const handleTMDBFromUrl = useCallback((data: Partial<RecordCreate>) => {
-    setPendingTMDB(data)
-    setDialogOpen(true)
-  }, [])
-
-  // ======================
   // Load data
   // ======================
 
   useEffect(() => {
-    if (loading) return
-    if (!user) {
-      router.push("/login")
-      return
-    }
+    if (loading || !user) return
 
     const raw = sessionStorage.getItem("pendingTMDB")
     if (raw) {
@@ -99,9 +67,14 @@ export default function RecordsPage() {
         console.error("Failed to parse pendingTMDB")
       }
     }
+  }, [user, loading])
 
-    recordsApi.getAll().then(setRecords).catch(console.error)
-  }, [user, loading, router, handleTMDBFromUrl])
+  useEffect(() => {
+    if (loading) return
+    if (!user) {
+      router.push("/login")
+    }
+  }, [user, loading, router])
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -141,7 +114,17 @@ export default function RecordsPage() {
     }
   }
 
-  const handleSubmit = dialogMode === "edit" ? handleUpdate : handleCreate
+  const handleSubmit = async (data: RecordCreate) => {
+    if (dialogMode === "edit" && selectedRecord) {
+      await updateRecord.mutateAsync({ id: selectedRecord.id, data })
+    } else {
+      await createRecord.mutateAsync(data)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    deleteRecord.mutate(id)
+  }
 
   if (loading) return null
   if (!user) return null
