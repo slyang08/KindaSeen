@@ -12,9 +12,10 @@ import { SearchCombobox } from "./SearchCombobox"
 
 type Props = {
   onSelect: (result: TMDBSearchResult) => void
+  onAddToWatchlist?: (result: TMDBSearchResult) => void
 }
 
-export function SearchDialog({ onSelect }: Props) {
+export function SearchDialog({ onSelect, onAddToWatchlist }: Props) {
   const [open, setOpen] = useState(false)
   const [savedQuery, setSavedQuery] = useState("")
 
@@ -39,6 +40,7 @@ export function SearchDialog({ onSelect }: Props) {
           </DialogHeader>
           <SearchCombobox
             onSelect={handleSelect}
+            onAddToWatchlist={onAddToWatchlist}
             defaultQuery={savedQuery}
             onQueryChange={setSavedQuery}
           />

@@ -52,23 +52,25 @@ function FilterControls({
   allGenres: string[]
 }) {
   return (
-    <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+    <>
       <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-full sm:w-36">
+        <SelectTrigger className="sm:w-36">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Status</SelectItem>
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <SelectItem key={value} value={value}>
-              {label}
-            </SelectItem>
-          ))}
+          {Object.entries(STATUS_LABELS)
+            .filter(([value]) => value !== "want_to_watch")
+            .map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
 
       <Select value={mediaTypeFilter} onValueChange={setMediaTypeFilter}>
-        <SelectTrigger className="w-full sm:w-36">
+        <SelectTrigger className="sm:w-36">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -83,7 +85,7 @@ function FilterControls({
 
       {allGenres.length > 0 && (
         <Select value={genreFilter} onValueChange={setGenreFilter}>
-          <SelectTrigger className="w-full sm:w-36">
+          <SelectTrigger className="sm:w-36">
             <SelectValue placeholder="Genre" />
           </SelectTrigger>
           <SelectContent>
@@ -98,7 +100,7 @@ function FilterControls({
       )}
 
       <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-        <SelectTrigger className="w-full sm:w-40">
+        <SelectTrigger className="sm:w-40">
           <SelectValue placeholder="Sort" />
         </SelectTrigger>
         <SelectContent>
@@ -109,7 +111,7 @@ function FilterControls({
           <SelectItem value="title_asc">Title A→Z</SelectItem>
         </SelectContent>
       </Select>
-    </div>
+    </>
   )
 }
 
@@ -119,6 +121,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
   const [genreFilter, setGenreFilter] = useState<string>("all")
   const [sortKey, setSortKey] = useState<SortKey>("created_at_desc")
   const [filterDialogOpen, setFilterDialogOpen] = useState(false)
+  const [showWantToWatch, setShowWantToWatch] = useState(false)
 
   const allGenres = useMemo(() => {
     const set = new Set<string>()
@@ -128,6 +131,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
 
   const filtered = useMemo(() => {
     return records
+      .filter((r) => showWantToWatch || r.status !== "want_to_watch")
       .filter((r) => statusFilter === "all" || r.status === statusFilter)
       .filter((r) => mediaTypeFilter === "all" || r.media_type === mediaTypeFilter)
       .filter((r) => genreFilter === "all" || r.genres?.includes(genreFilter))
@@ -145,7 +149,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
             return a.title.localeCompare(b.title)
         }
       })
-  }, [records, statusFilter, mediaTypeFilter, genreFilter, sortKey])
+  }, [records, showWantToWatch, statusFilter, mediaTypeFilter, genreFilter, sortKey])
 
   const activeFilterCount = [
     statusFilter !== "all",
@@ -165,11 +169,25 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
     allGenres,
   }
 
+  const watchlistToggle = (
+    <button
+      onClick={() => setShowWantToWatch(!showWantToWatch)}
+      className={`text-sm border rounded px-3 py-1.5 transition-colors whitespace-nowrap ${
+        showWantToWatch
+          ? "bg-primary text-primary-foreground border-primary"
+          : "text-muted-foreground border-input"
+      }`}
+    >
+      {showWantToWatch ? "Hiding Watchlist" : "Show Watchlist"}
+    </button>
+  )
+
   return (
     <div className="space-y-4">
       {/* Desktop filters */}
-      <div className="hidden sm:block">
+      <div className="hidden sm:flex sm:flex-wrap sm:items-center gap-2">
         <FilterControls {...filterProps} />
+        {watchlistToggle}
       </div>
 
       {/* Mobile filter button */}
@@ -188,6 +206,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
             </span>
           )}
         </Button>
+        {watchlistToggle}
       </div>
 
       {/* Mobile filter dialog */}
@@ -197,7 +216,9 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
             <DialogTitle>Filter & Sort</DialogTitle>
             <DialogDescription>Filter and sort your records.</DialogDescription>
           </DialogHeader>
-          <FilterControls {...filterProps} />
+          <div className="flex flex-col gap-2">
+            <FilterControls {...filterProps} />
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -210,8 +231,14 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
         </p>
       ) : (
         <div className="space-y-3">
-          {filtered.map((record) => (
-            <RecordCard key={record.id} record={record} onEdit={onEdit} onDelete={onDelete} />
+          {filtered.map((record, index) => (
+            <RecordCard
+              key={record.id}
+              record={record}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              priority={index === 0}
+            />
           ))}
         </div>
       )}
