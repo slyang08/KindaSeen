@@ -2,7 +2,7 @@
 "use client"
 
 import type { TMDBSearchResult } from "@kindaseen/shared"
-import { Search } from "lucide-react"
+import { BookmarkPlus, Plus, Search } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
@@ -11,6 +11,7 @@ import { tmdbApi } from "@/lib/tmdb"
 
 type Props = {
   onSelect: (result: TMDBSearchResult) => void
+  onAddToWatchlist?: (result: TMDBSearchResult) => void
   placeholder?: string
   defaultQuery?: string
   onQueryChange?: (q: string) => void
@@ -18,6 +19,7 @@ type Props = {
 
 export function SearchCombobox({
   onSelect,
+  onAddToWatchlist,
   placeholder = "Search from TMDB...",
   defaultQuery = "",
   onQueryChange,
@@ -63,15 +65,11 @@ export function SearchCombobox({
           {loading && <div className="px-4 py-3 text-sm text-muted-foreground">Searching...</div>}
           {!loading &&
             results.map((result) => (
-              <button
+              <div
                 key={result.tmdb_id}
-                type="button"
-                onClick={() => {
-                  onSelect(result)
-                  setResults([])
-                }}
-                className="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-accent transition-colors"
+                className="flex items-center gap-3 w-full px-3 py-2 hover:bg-accent transition-colors"
               >
+                {/* Poster */}
                 {result.poster_url ? (
                   <Image
                     src={result.poster_url}
@@ -83,7 +81,9 @@ export function SearchCombobox({
                 ) : (
                   <div className="h-12 w-8 bg-muted rounded shrink-0" />
                 )}
-                <div className="min-w-0">
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{result.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {result.media_type === "movie" ? "Movie" : "TV"}
@@ -91,7 +91,35 @@ export function SearchCombobox({
                     {result.tmdb_rating ? ` · ★ ${result.tmdb_rating}` : ""}
                   </p>
                 </div>
-              </button>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {onAddToWatchlist && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onAddToWatchlist(result)
+                        setResults([])
+                      }}
+                      className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground"
+                      title="Add to Watchlist"
+                    >
+                      <BookmarkPlus className="size-4" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelect(result)
+                      setResults([])
+                    }}
+                    className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground"
+                    title="Add to Records"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
+              </div>
             ))}
         </div>
       )}

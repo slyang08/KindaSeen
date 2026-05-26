@@ -1,10 +1,9 @@
-// apps/web/src/features/records/RecordCard.tsx
+// apps/web/src/features/records/WatchlistCard.tsx
 "use client"
 
-import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
-import { MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { MEDIA_TYPE_LABELS, type Record as MediaRecord } from "@kindaseen/shared"
+import { MoreVertical, Pencil, Play, Trash2 } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
 
 import {
   DropdownMenu,
@@ -17,30 +16,12 @@ type Props = {
   record: MediaRecord
   onEdit: (record: MediaRecord) => void
   onDelete: (id: string) => void
+  onStartWatching: (id: string) => void
   priority?: boolean
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  watching: "text-blue-500",
-  completed: "text-green-500",
-  dropped: "text-red-500",
-  want_to_watch: "text-muted-foreground",
-}
-
-export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
-  const [expanded, setExpanded] = useState(false)
-
+export function WatchlistCard({ record, onEdit, onDelete, onStartWatching, priority }: Props) {
   const title = record.release_year ? `${record.title} (${record.release_year})` : record.title
-
-  const statusColor = STATUS_COLORS[record.status] ?? "text-muted-foreground"
-
-  const watchMeta = [
-    record.season > 1 ? `S${record.season}` : null,
-    record.episode != null ? `EP ${record.episode}` : null,
-    record.rating != null ? `★ ${record.rating}/10` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ")
 
   const displayText = record.notes?.trim()
     ? record.notes
@@ -50,7 +31,6 @@ export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
 
   return (
     <div className="flex items-start gap-3 p-4 border rounded-lg">
-      {/* Poster */}
       <div className="shrink-0 w-14 h-20 sm:w-16 sm:h-24 rounded overflow-hidden bg-muted flex items-center justify-center">
         {record.poster_url ? (
           <Image
@@ -68,9 +48,7 @@ export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
         )}
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
-        {/* Row 1: Title + Media Type badge + ... menu */}
         <div className="flex items-start justify-between gap-2">
           <p className="font-medium leading-snug">{title}</p>
           <div className="flex items-center gap-1 shrink-0">
@@ -100,13 +78,10 @@ export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
           </div>
         </div>
 
-        {/* Row 2: Status (colored) + watch meta */}
-        <p className="text-sm">
-          <span className={statusColor}>{STATUS_LABELS[record.status]}</span>
-          {watchMeta && <span className="text-muted-foreground"> · {watchMeta}</span>}
-        </p>
+        {record.tmdb_rating != null && (
+          <p className="text-sm text-muted-foreground">★ {record.tmdb_rating} on TMDB</p>
+        )}
 
-        {/* Row 3: Genres */}
         {record.genres && record.genres.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-0.5">
             {record.genres.map((genre) => (
@@ -117,28 +92,17 @@ export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
           </div>
         )}
 
-        {/* Row 4: Note / Overview */}
         {displayText && (
-          <div>
-            <p
-              className={
-                expanded
-                  ? "text-xs text-muted-foreground/70"
-                  : "text-xs text-muted-foreground/70 line-clamp-1 sm:line-clamp-2"
-              }
-            >
-              {displayText}
-            </p>
-            {displayText.length > 80 && (
-              <button
-                onClick={() => setExpanded((prev) => !prev)}
-                className="text-xs text-muted-foreground underline mt-0.5"
-              >
-                {expanded ? "Show less" : "Show more"}
-              </button>
-            )}
-          </div>
+          <p className="text-xs text-muted-foreground/70 line-clamp-2">{displayText}</p>
         )}
+
+        <button
+          onClick={() => onStartWatching(record.id)}
+          className="inline-flex items-center gap-1.5 text-xs border rounded px-2.5 py-1 mt-1 hover:bg-muted transition-colors"
+        >
+          <Play className="size-3" />
+          Start watching
+        </button>
       </div>
     </div>
   )
