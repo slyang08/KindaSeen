@@ -35,7 +35,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <Header />
-            {children}
+            <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6">{children}</main>
           </AuthProvider>
         </QueryProvider>
       </body>

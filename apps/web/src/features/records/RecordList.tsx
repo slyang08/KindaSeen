@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useFavorites } from "@/features/favorites"
 import { RecordCard } from "@/features/records/RecordCard"
 
 type SortKey = "created_at_desc" | "created_at_asc" | "rating_desc" | "rating_asc" | "title_asc"
@@ -122,6 +123,9 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("created_at_desc")
   const [filterDialogOpen, setFilterDialogOpen] = useState(false)
   const [showWantToWatch, setShowWantToWatch] = useState(false)
+  const { data: favorites } = useFavorites()
+  const favoriteIds = useMemo(() => new Set(favorites?.map((f) => f.record_id) ?? []), [favorites])
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
 
   const allGenres = useMemo(() => {
     const set = new Set<string>()
@@ -132,6 +136,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
   const filtered = useMemo(() => {
     return records
       .filter((r) => showWantToWatch || r.status !== "want_to_watch")
+      .filter((r) => !showFavoritesOnly || favoriteIds.has(r.id))
       .filter((r) => statusFilter === "all" || r.status === statusFilter)
       .filter((r) => mediaTypeFilter === "all" || r.media_type === mediaTypeFilter)
       .filter((r) => genreFilter === "all" || r.genres?.includes(genreFilter))
@@ -149,7 +154,16 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
             return a.title.localeCompare(b.title)
         }
       })
-  }, [records, showWantToWatch, statusFilter, mediaTypeFilter, genreFilter, sortKey])
+  }, [
+    records,
+    showWantToWatch,
+    showFavoritesOnly,
+    favoriteIds,
+    statusFilter,
+    mediaTypeFilter,
+    genreFilter,
+    sortKey,
+  ])
 
   const activeFilterCount = [
     statusFilter !== "all",
@@ -182,12 +196,26 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
     </button>
   )
 
+  const favoritesToggle = (
+    <button
+      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+      className={`text-sm border rounded px-3 py-1.5 transition-colors whitespace-nowrap ${
+        showFavoritesOnly
+          ? "bg-primary text-primary-foreground border-primary"
+          : "text-muted-foreground border-input"
+      }`}
+    >
+      {showFavoritesOnly ? "Favorites Only" : "Show Favorites"}
+    </button>
+  )
+
   return (
     <div className="space-y-4">
       {/* Desktop filters */}
       <div className="hidden sm:flex sm:flex-wrap sm:items-center gap-2">
         <FilterControls {...filterProps} />
         {watchlistToggle}
+        {favoritesToggle}
       </div>
 
       {/* Mobile filter button */}
@@ -207,6 +235,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
           )}
         </Button>
         {watchlistToggle}
+        {favoritesToggle}
       </div>
 
       {/* Mobile filter dialog */}
@@ -238,6 +267,7 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
               onEdit={onEdit}
               onDelete={onDelete}
               priority={index === 0}
+              isFavorite={favoriteIds.has(record.id)}
             />
           ))}
         </div>

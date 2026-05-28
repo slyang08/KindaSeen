@@ -25,7 +25,7 @@ export default function TrashPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
+    <div className="py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Trash</h1>
         <Button variant="outline" size="sm" onClick={() => router.push("/records")}>

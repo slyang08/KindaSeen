@@ -5,6 +5,8 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.config import settings
 from app.core.database import Base
+from app.favorites.model import Favorite  # noqa: F401
+from app.records.model import Record  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

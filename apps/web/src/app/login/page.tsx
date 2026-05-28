@@ -33,7 +33,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-sm mx-auto p-6 mt-16 space-y-6">
+    <div className="py-6 mt-16 space-y-6">
       <h1 className="text-2xl font-semibold">Login</h1>
       <div className="space-y-4">
         <div className="space-y-1">

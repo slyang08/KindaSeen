@@ -71,6 +71,9 @@ export function Header() {
                     <Link href="/records">My Records</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
+                    <Link href="/favorites">Favorites</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
                     <Link href="/watchlist">Watchlist</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
@@ -144,6 +147,13 @@ export function Header() {
                 className="text-sm py-2 hover:text-muted-foreground transition-colors"
               >
                 My Records
+              </Link>
+              <Link
+                href="/favorites"
+                onClick={() => setMenuOpen(false)}
+                className="text-sm py-2 hover:text-muted-foreground transition-colors"
+              >
+                Favorites
               </Link>
               <Link
                 href="/watchlist"
