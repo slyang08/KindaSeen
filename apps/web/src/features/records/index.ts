@@ -1,4 +1,5 @@
 export * from "./GenresField"
+export * from "./queries"
 export * from "./RecordCard"
 export * from "./RecordForm"
 export * from "./RecordFormDialog"

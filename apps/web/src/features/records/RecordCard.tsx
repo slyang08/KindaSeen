@@ -2,7 +2,7 @@
 "use client"
 
 import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
-import { MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { Heart, MoreVertical, Pencil, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 
@@ -12,12 +12,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useToggleFavorite } from "@/features/favorites"
 
 type Props = {
   record: MediaRecord
-  onEdit: (record: MediaRecord) => void
-  onDelete: (id: string) => void
+  onEdit?: (record: MediaRecord) => void
+  onDelete?: (id: string) => void
   priority?: boolean
+  isFavorite?: boolean
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -27,8 +29,9 @@ const STATUS_COLORS: Record<string, string> = {
   want_to_watch: "text-muted-foreground",
 }
 
-export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
+export function RecordCard({ record, onEdit, onDelete, priority, isFavorite = false }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const { mutate: toggleFavorite } = useToggleFavorite()
 
   const title = record.release_year ? `${record.title} (${record.release_year})` : record.title
 
@@ -84,17 +87,29 @@ export function RecordCard({ record, onEdit, onDelete, priority }: Props) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(record)}>
-                  <Pencil className="size-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => onDelete(record.id)}
-                  className="text-destructive focus:text-destructive"
+                  onClick={() => toggleFavorite({ record_id: record.id, isFavorite })}
                 >
-                  <Trash2 className="size-4 mr-2" />
-                  Delete
+                  <Heart
+                    className={`size-4 mr-2 ${isFavorite ? "fill-current text-red-500" : ""}`}
+                  />
+                  {isFavorite ? "Unfavorite" : "Favorite"}
                 </DropdownMenuItem>
+                {onEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(record)}>
+                    <Pencil className="size-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem
+                    onClick={() => onDelete(record.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="size-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

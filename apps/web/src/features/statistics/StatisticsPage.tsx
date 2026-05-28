@@ -126,7 +126,7 @@ export function StatisticsPage() {
     }))
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-8">
+    <div className="py-6 space-y-8">
       <h1 className="text-2xl font-semibold">Statistics</h1>
 
       {/* Summary cards */}
