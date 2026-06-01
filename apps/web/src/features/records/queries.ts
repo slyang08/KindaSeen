@@ -88,3 +88,11 @@ export function useRestoreRecord() {
     },
   })
 }
+
+export function usePermanentDeleteRecord() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => recordsApi.permanentDelete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: recordKeys.deleted }),
+  })
+}

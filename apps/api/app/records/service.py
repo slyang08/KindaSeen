@@ -59,3 +59,14 @@ class RecordService:
             )
 
         return self.repository.restore(record)
+
+    def permanent_delete(self, record_id: uuid.UUID, user_id: uuid.UUID):
+        record = self._get_or_404(record_id, user_id, include_deleted=True)
+
+        if not record.deleted_at:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Record must be soft-deleted before permanent deletion",
+            )
+
+        self.repository.permanent_delete(record)

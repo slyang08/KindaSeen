@@ -2,10 +2,16 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
-import { useDeletedRecords, useRestoreRecord } from "@/features/records/queries"
+import {
+  useDeletedRecords,
+  usePermanentDeleteRecord,
+  useRestoreRecord,
+} from "@/features/records/queries"
 
 export default function TrashPage() {
   const { user, loading } = useAuth()
@@ -13,6 +19,8 @@ export default function TrashPage() {
 
   const { data: records = [] } = useDeletedRecords()
   const restoreRecord = useRestoreRecord()
+  const permanentDeleteRecord = usePermanentDeleteRecord()
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
   if (loading) return null
   if (!user) {
@@ -45,24 +53,70 @@ export default function TrashPage() {
             <div className="space-y-1">
               <p className="font-medium">{record.title}</p>
               <p className="text-sm text-muted-foreground">
-                {record.media_type} · {record.status}
-                {record.rating && ` · ${record.rating}/10`}
+                {record.media_type} · {record.status} ·{" "}
+                {record.rating && ` · ★ ${record.rating}/10`}
               </p>
               {record.notes && <p className="text-sm text-muted-foreground">{record.notes}</p>}
-              {record.deleted_at && (
-                <p className="text-xs text-muted-foreground">
-                  Deleted {new Date(record.deleted_at).toLocaleDateString()}
-                </p>
+              {record.deleted_at &&
+                (() => {
+                  const deletedAt = new Date(record.deleted_at)
+                  const expiresAt = new Date(deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000)
+                  const daysLeft = Math.ceil(
+                    (expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                  )
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      Deleted {deletedAt.toLocaleDateString()} · auto-deletes in {daysLeft}d
+                    </p>
+                  )
+                })()}
+            </div>
+            <div className="flex items-center gap-2">
+              {confirmId === record.id ? (
+                <>
+                  <span className="text-xs text-muted-foreground">Sure?</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      permanentDeleteRecord.mutate(record.id, {
+                        onSuccess: () => {
+                          toast.success(`"${record.title}" permanently deleted`)
+                          setConfirmId(null)
+                        },
+                      })
+                    }}
+                    disabled={permanentDeleteRecord.isPending}
+                  >
+                    Delete
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setConfirmId(null)}>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex flex-col items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRestore(record.id)}
+                      disabled={restoreRecord.isPending}
+                    >
+                      Restore
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setConfirmId(record.id)}
+                    >
+                      Delete Forever
+                    </Button>
+                  </div>
+                </>
               )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleRestore(record.id)}
-              disabled={restoreRecord.isPending}
-            >
-              Restore
-            </Button>
           </div>
         ))}
       </div>

@@ -26,4 +26,6 @@ export const recordsApi = {
 
   restore: (id: string): Promise<Record> =>
     fetchWithAuth(`/records/${id}/restore`, { method: "PATCH" }),
+
+  permanentDelete: (id: string) => fetchWithAuth(`/records/${id}/permanent`, { method: "DELETE" }),
 }

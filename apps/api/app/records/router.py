@@ -77,3 +77,12 @@ def restore_record(
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
     return service.restore(record_id, user_id)
+
+
+@router.delete("/{record_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+def permanent_delete_record(
+    record_id: uuid.UUID,
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    service.permanent_delete(record_id, user_id)
