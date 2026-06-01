@@ -79,6 +79,9 @@ export function Header() {
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/statistics">Statistics</Link>
                   </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/settings">Settings</Link>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -168,6 +171,13 @@ export function Header() {
                 className="text-sm py-2 hover:text-muted-foreground transition-colors"
               >
                 Statistics
+              </Link>
+              <Link
+                href="/settings"
+                onClick={() => setMenuOpen(false)}
+                className="text-sm py-2 hover:text-muted-foreground transition-colors"
+              >
+                Settings
               </Link>
               <button
                 onClick={async () => {

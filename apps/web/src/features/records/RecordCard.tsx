@@ -1,7 +1,12 @@
 // apps/web/src/features/records/RecordCard.tsx
 "use client"
 
-import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
+import {
+  MEDIA_TYPE_LABELS,
+  type Record as MediaRecord,
+  STATUS_COLORS,
+  STATUS_LABELS,
+} from "@kindaseen/shared"
 import { Heart, MoreVertical, Pencil, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
@@ -20,13 +25,6 @@ type Props = {
   onDelete?: (id: string) => void
   priority?: boolean
   isFavorite?: boolean
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  watching: "text-blue-500",
-  completed: "text-green-500",
-  dropped: "text-red-500",
-  want_to_watch: "text-muted-foreground",
 }
 
 export function RecordCard({ record, onEdit, onDelete, priority, isFavorite = false }: Props) {

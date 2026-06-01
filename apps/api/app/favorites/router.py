@@ -9,12 +9,25 @@ from app.core.database import get_db
 from app.favorites.repository import FavoriteRepository
 from app.favorites.schema import FavoriteCreate, FavoriteResponse
 from app.favorites.service import FavoriteService
+from app.favorites.share_repository import FavoriteShareTokenRepository
+from app.favorites.share_schema import (
+    SharedFavoriteResponse,
+    ShareExpiry,
+    ShareTokenResponse,
+)
+from app.favorites.share_service import FavoriteShareService
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
 
 def get_favorite_service(db: Session = Depends(get_db)) -> FavoriteService:
     return FavoriteService(FavoriteRepository(db))
+
+
+def get_share_service(db: Session = Depends(get_db)) -> FavoriteShareService:
+    return FavoriteShareService(
+        share_repository=FavoriteShareTokenRepository(db),
+    )
 
 
 @router.get("/", response_model=list[FavoriteResponse])
@@ -41,3 +54,19 @@ def delete_favorite(
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
     service.remove(user_id, record_id)
+
+
+@router.post(
+    "/share/personal", response_model=ShareTokenResponse, status_code=status.HTTP_201_CREATED
+)
+def create_personal_share(
+    expires_in: ShareExpiry,
+    service: FavoriteShareService = Depends(get_share_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+):
+    return service.create_token(owner_id=user_id, expires_in=expires_in)
+
+
+@router.get("/share/p/{token}", response_model=list[SharedFavoriteResponse])
+def get_shared_favorites(token: str, service: FavoriteShareService = Depends(get_share_service)):
+    return service.get_shared_favorites(token)

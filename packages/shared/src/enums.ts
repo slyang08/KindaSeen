@@ -34,3 +34,10 @@ export const STATUS_LABELS: Record<Status, string> = {
   dropped: "Dropped",
   want_to_watch: "Want to Watch",
 };
+
+export const STATUS_COLORS: Record<string, string> = {
+  watching: "text-blue-500",
+  completed: "text-green-500",
+  dropped: "text-red-500",
+  want_to_watch: "text-muted-foreground",
+};

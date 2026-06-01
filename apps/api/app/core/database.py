@@ -15,7 +15,10 @@ class Base(DeclarativeBase):
 
 
 def init_db() -> None:
-    from app.records import model  # noqa: F401
+    from app.favorites import model as favorites_model  # noqa: F401
+    from app.favorites import share_model  # noqa: F401
+    from app.records import model as records_model  # noqa: F401
+    from app.users import model as users_model  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 

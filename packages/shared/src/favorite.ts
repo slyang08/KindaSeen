@@ -6,3 +6,11 @@ export type Favorite = {
   record_id: string;
   created_at: string;
 };
+
+export type ShareExpiry = "1h" | "1d";
+
+export interface ShareTokenResponse {
+  token: string;
+  expires_at: string;
+  link: string;
+}
