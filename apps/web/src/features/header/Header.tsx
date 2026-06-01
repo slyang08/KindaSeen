@@ -10,6 +10,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
 import { useCreateRecord } from "@/features/records/queries"
+import { useMyProfile } from "@/features/settings"
 
 import { SearchDialog } from "../search"
 
@@ -17,6 +18,7 @@ export function Header() {
   const { user, loading, logout } = useAuth()
   const router = useRouter()
   const createRecord = useCreateRecord()
+  const { data: profile } = useMyProfile()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const handleAddToWatchlist = (result: TMDBSearchResult) => {
@@ -65,7 +67,10 @@ export function Header() {
                     onAddToWatchlist={handleAddToWatchlist}
                   />
                   <span className="text-sm text-muted-foreground">
-                    Hi, {user.email?.split("@")[0].replace(/^./, (c) => c.toUpperCase())}
+                    Hi,{" "}
+                    {profile?.display_name ??
+                      profile?.username ??
+                      user.email?.split("@")[0].replace(/^./, (c) => c.toUpperCase())}
                   </span>
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/records">My Records</Link>
@@ -142,7 +147,10 @@ export function Header() {
           <div className="sm:hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[90%] max-w-md rounded-xl bg-background shadow-xl border z-50 animate-fade-in">
             <div className="px-6 py-3 flex flex-col gap-2">
               <span className="text-sm text-muted-foreground py-2">
-                Hi, {user.email?.split("@")[0].replace(/^./, (c) => c.toUpperCase())}
+                Hi,{" "}
+                {profile?.display_name ??
+                  profile?.username ??
+                  user.email?.split("@")[0].replace(/^./, (c) => c.toUpperCase())}
               </span>
               <Link
                 href="/records"
