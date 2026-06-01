@@ -68,3 +68,7 @@ class RecordRepository:
         self.db.commit()
         self.db.refresh(record)
         return record
+
+    def permanent_delete(self, record: Record) -> None:
+        self.db.delete(record)
+        self.db.commit()
