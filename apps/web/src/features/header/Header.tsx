@@ -9,7 +9,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
-import { useCreateRecord } from "@/features/records/queries"
+import { useCreateRecord, useDeleteRecord, useRecords } from "@/features/records/queries"
 import { useMyProfile } from "@/features/settings"
 
 import { SearchDialog } from "../search"
@@ -20,6 +20,8 @@ export function Header() {
   const createRecord = useCreateRecord()
   const { data: profile } = useMyProfile()
   const [menuOpen, setMenuOpen] = useState(false)
+  const deleteRecord = useDeleteRecord()
+  const { data: records = [] } = useRecords()
 
   const handleAddToWatchlist = (result: TMDBSearchResult) => {
     createRecord.mutate({
@@ -38,6 +40,17 @@ export function Header() {
       notes: null,
     })
   }
+
+  const handleRemoveFromWatchlist = (result: TMDBSearchResult) => {
+    const record = records.find((r) => r.status === "want_to_watch" && r.tmdb_id === result.tmdb_id)
+    if (record) deleteRecord.mutate(record.id)
+  }
+
+  const watchlistTmdbIds = new Set(
+    records
+      .filter((r) => r.status === "want_to_watch" && r.tmdb_id != null)
+      .map((r) => r.tmdb_id as number)
+  )
 
   return (
     <header className="border-b relative z-50">
@@ -65,6 +78,8 @@ export function Header() {
                       }
                     }}
                     onAddToWatchlist={handleAddToWatchlist}
+                    onRemoveFromWatchlist={handleRemoveFromWatchlist}
+                    watchlistTmdbIds={watchlistTmdbIds}
                   />
                   <span className="text-sm text-muted-foreground">
                     Hi,{" "}
@@ -111,6 +126,8 @@ export function Header() {
                       }
                     }}
                     onAddToWatchlist={handleAddToWatchlist}
+                    onRemoveFromWatchlist={handleRemoveFromWatchlist}
+                    watchlistTmdbIds={watchlistTmdbIds}
                   />
                   <button
                     onClick={() => setMenuOpen((prev) => !prev)}
