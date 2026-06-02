@@ -3,7 +3,7 @@
 
 import type { Record as MediaRecord, RecordCreate } from "@kindaseen/shared"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useAuth } from "@/features/auth/AuthProvider"
 import { useDeleteRecord, useRecords, useUpdateRecord } from "@/features/records/queries"
@@ -23,11 +23,10 @@ export default function WatchlistPage() {
 
   const watchlist = allRecords.filter((r) => r.status === "want_to_watch")
 
-  if (loading) return null
-  if (!user) {
-    router.push("/login")
-    return null
-  }
+  useEffect(() => {
+    if (!loading && !user) router.push("/login")
+  }, [loading, user, router])
+  if (loading || !user) return null
 
   const handleStartWatching = (id: string) => {
     updateRecord.mutate({ id, data: { status: "watching" } })

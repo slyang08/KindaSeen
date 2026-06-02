@@ -2,7 +2,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -22,11 +22,10 @@ export default function TrashPage() {
   const permanentDeleteRecord = usePermanentDeleteRecord()
   const [confirmId, setConfirmId] = useState<string | null>(null)
 
-  if (loading) return null
-  if (!user) {
-    router.push("/login")
-    return null
-  }
+  useEffect(() => {
+    if (!loading && !user) router.push("/login")
+  }, [loading, user, router])
+  if (loading || !user) return null
 
   const handleRestore = (id: string) => {
     restoreRecord.mutate(id)
