@@ -22,11 +22,7 @@ async function getToken(): Promise<string | null> {
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = await getToken()
 
-  if (!token) {
-    await supabase.auth.signOut()
-    window.location.href = "/login"
-    throw new Error("No token")
-  }
+  if (!token) throw new Error("No token")
 
   const res = await fetch(`${API_URL}${url}`, {
     ...options,
@@ -39,7 +35,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   if (res.status === 401) {
     await supabase.auth.signOut()
-    window.location.href = "/login"
     throw new Error("Unauthorized")
   }
 

@@ -21,7 +21,7 @@ export function Header() {
   const { data: profile } = useMyProfile()
   const [menuOpen, setMenuOpen] = useState(false)
   const deleteRecord = useDeleteRecord()
-  const { data: records = [] } = useRecords()
+  const { data: records = [] } = useRecords(!!user)
 
   const handleAddToWatchlist = (result: TMDBSearchResult) => {
     createRecord.mutate({

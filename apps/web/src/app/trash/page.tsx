@@ -17,7 +17,7 @@ export default function TrashPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const { data: records = [] } = useDeletedRecords()
+  const { data: records = [] } = useDeletedRecords(!!user)
   const restoreRecord = useRestoreRecord()
   const permanentDeleteRecord = usePermanentDeleteRecord()
   const [confirmId, setConfirmId] = useState<string | null>(null)
