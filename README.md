@@ -5,7 +5,42 @@
 
 🔗 [KindaSeen Website](https://kindaseen.vercel.app)
 
-## Structure
+A full-stack media tracking app built as a portfolio project to explore modern web architecture — featuring TMDB integration, optimistic UI, and a shareable Favorites system.
+
+## Features
+
+- **Media Tracking** — Add, edit, and soft-delete records across movies, varieties, dramas, anime, manga, and more
+- **TMDB Search** — Search and auto-fill metadata (poster, title, genre) via a proxied TMDB API
+- **Favorites & Sharing** — Curate a Favorites list with public profile links (`/u/{username}`) and private share tokens (`/share/p/{token}`)
+- **Filter, Sort & Search** — Client-side filtering and sorting across all records
+- **Statistics** — Visual breakdown of your watching habits with charts
+- **Optimistic UI** — Instant feedback on record mutations with automatic rollback on failure
+- **Trash & Restore** — Soft delete with a recoverable Trash page
+
+## Tech Stack
+
+| Layer        | Technology                                       |
+| ------------ | ------------------------------------------------ |
+| Frontend     | Next.js 16, React 19, TypeScript                 |
+| UI           | shadcn/ui, Radix UI, Tailwind CSS v4             |
+| State / Data | TanStack Query v5, React Hook Form, Zod          |
+| Backend      | FastAPI, SQLAlchemy (async), Alembic             |
+| Database     | Supabase (PostgreSQL)                            |
+| Auth         | Supabase JWT (ES256 / JWKS via PyJWT)            |
+| External API | TMDB API (proxied through FastAPI)               |
+| Deployment   | Vercel (web), Render via Docker (API)            |
+| CI/CD        | GitHub Actions → Docker Hub → Render deploy hook |
+
+## Architecture Highlights
+
+- **Monorepo** — pnpm workspaces with `apps/web`, `apps/api`, `packages/shared`
+- **Feature-based structure** — FastAPI backend organized by domain module (records, tmdb, favorites, auth), mirroring NestJS module patterns
+- **TMDB proxy** — All TMDB requests routed through the FastAPI backend to protect the API token and enable future caching
+- **Supabase JWT auth** — Token verified server-side via JWKS with TTLCache to avoid redundant key fetches
+- **Optimistic mutations** — TanStack Query mutations update the cache immediately and roll back on API failure
+- **pgvector groundwork** — DB schema prepared for future OpenAI embedding-based recommendations
+
+## Project Structure
 
 ```
 KindaSeen/
@@ -13,10 +48,10 @@ KindaSeen/
 │   ├── web/          # Next.js (port 3000)
 │   └── api/          # FastAPI (port 8000)
 └── packages/
-    └── shared/       # Shared types
+    └── shared/       # Shared TypeScript types
 ```
 
-## Development
+## Local Development
 
 ### 1. Install Node dependencies
 
@@ -48,26 +83,24 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 4. Start both frontend and backend
+### 4. Start dev servers
 
 ```bash
 # Run from root
 pnpm dev
 ```
 
-Next.js：http://localhost:3000  
-FastAPI：http://localhost:8000  
-API Doc：http://localhost:8000/docs
+| Service  | URL                        |
+| -------- | -------------------------- |
+| Next.js  | http://localhost:3000      |
+| FastAPI  | http://localhost:8000      |
+| API Docs | http://localhost:8000/docs |
 
-## Tech Stack
+## Roadmap
 
-- **FrontEnd**: Next.js 16, TypeScript
-- **BackEnd**: FastAPI, SQLAlchemy (async), Alembic
-- **Database**: Supabase (PostgreSQL)
-- **Search**: TMDB API
-- **AI**: OpenAI Embeddings（planned）
-
-## Deployment
-
-- Frontend: Vercel
-- Backend: Docker, Render
+- [ ] Rating system with stats (avg score, top-rated page)
+- [ ] Review / comment system
+- [ ] Infinite scroll & pagination
+- [ ] TMDB response caching (Redis or in-memory)
+- [ ] Background jobs (Celery/RQ) for data sync
+- [ ] Recommendation engine (OpenAI embeddings + pgvector)
