@@ -14,7 +14,7 @@ export default function WatchlistPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const { data: allRecords = [] } = useRecords()
+  const { data: allRecords = [] } = useRecords(!!user)
   const updateRecord = useUpdateRecord()
   const deleteRecord = useDeleteRecord()
 

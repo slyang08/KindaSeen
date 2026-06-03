@@ -37,7 +37,7 @@ export default function RecordsPage() {
   // State hierarchy (important)
   // ======================
 
-  const { data: records = [] } = useRecords()
+  const { data: records = [] } = useRecords(!!user)
   const createRecord = useCreateRecord()
   const updateRecord = useUpdateRecord()
   const deleteRecord = useDeleteRecord()

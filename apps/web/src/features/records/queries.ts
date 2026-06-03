@@ -9,17 +9,19 @@ export const recordKeys = {
   deleted: ["records", "deleted"] as const,
 }
 
-export function useRecords() {
+export function useRecords(enabled = true) {
   return useQuery({
     queryKey: recordKeys.all,
     queryFn: () => recordsApi.getAll(),
+    enabled,
   })
 }
 
-export function useDeletedRecords() {
+export function useDeletedRecords(enabled = true) {
   return useQuery({
     queryKey: recordKeys.deleted,
     queryFn: () => recordsApi.getDeleted(),
+    enabled,
   })
 }
 
