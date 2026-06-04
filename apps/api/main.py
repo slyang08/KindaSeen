@@ -10,6 +10,7 @@ from app.health.router import router as health_router
 from app.records.router import router as records_router
 from app.tmdb.router import router as tmdb_router
 from app.users.router import router as users_router
+from app.users.stats_router import router as stats_router
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ app.include_router(health_router)
 app.include_router(records_router)
 app.include_router(tmdb_router)
 app.include_router(users_router)
+app.include_router(stats_router)
 
 
 @app.get("/")
