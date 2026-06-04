@@ -1,7 +1,7 @@
 // src/features/statistics/StatisticsPage.tsx
 "use client"
 
-import type { Record as MediaRecord } from "@kindaseen/shared"
+import type { UserStatsResponse } from "@kindaseen/shared"
 import { MEDIA_TYPE_LABELS, STATUS_LABELS } from "@kindaseen/shared"
 import { useEffect, useState } from "react"
 import {
@@ -16,7 +16,7 @@ import {
   YAxis,
 } from "recharts"
 
-import { recordsApi } from "@/lib/records"
+import { statsApi } from "@/lib/stats"
 
 const STATUS_COLORS: Record<string, string> = {
   watching: "#3b82f6",
@@ -25,105 +25,37 @@ const STATUS_COLORS: Record<string, string> = {
   want_to_watch: "#94a3b8",
 }
 
-function computeStats(records: MediaRecord[]) {
-  const total = records.length
-  const byStatus = Object.fromEntries(
-    Object.keys(STATUS_LABELS).map((s) => [s, records.filter((r) => r.status === s).length])
-  )
-  const completed = byStatus.completed ?? 0
-  const tracked = total - (byStatus.want_to_watch ?? 0)
-  const completionRate = tracked > 0 ? Math.round((completed / tracked) * 100) : 0
-
-  const rated = records.filter((r) => r.rating != null)
-  const avgRating =
-    rated.length > 0
-      ? (rated.reduce((sum, r) => sum + (r.rating ?? 0), 0) / rated.length).toFixed(1)
-      : null
-
-  const genreCount: Record<string, number> = {}
-  records.forEach((r) =>
-    r.genres?.forEach((g) => {
-      genreCount[g] = (genreCount[g] ?? 0) + 1
-    })
-  )
-  const topGenres = Object.entries(genreCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name, count]) => ({ name, count }))
-
-  const ratingBuckets = [
-    { label: "1-3", count: rated.filter((r) => (r.rating ?? 0) <= 3).length },
-    {
-      label: "4-6",
-      count: rated.filter((r) => (r.rating ?? 0) >= 4 && (r.rating ?? 0) <= 6).length,
-    },
-    {
-      label: "7-9",
-      count: rated.filter((r) => (r.rating ?? 0) >= 7 && (r.rating ?? 0) <= 9).length,
-    },
-    { label: "10", count: rated.filter((r) => r.rating === 10).length },
-  ]
-
-  const now = new Date()
-  const thisYear = records.filter(
-    (r) => new Date(r.created_at).getFullYear() === now.getFullYear()
-  ).length
-  const last30 = records.filter(
-    (r) => (now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24) <= 30
-  ).length
-
-  const byMediaType = Object.entries(
-    records.reduce(
-      (acc, r) => {
-        acc[r.media_type] = (acc[r.media_type] ?? 0) + 1
-        return acc
-      },
-      {} as Record<string, number>
-    )
-  )
-    .sort((a, b) => b[1] - a[1])
-    .map(([type, count]) => ({
-      name: MEDIA_TYPE_LABELS[type as keyof typeof MEDIA_TYPE_LABELS] ?? type,
-      count,
-    }))
-
-  return {
-    total,
-    byStatus,
-    completionRate,
-    avgRating,
-    topGenres,
-    ratingBuckets,
-    thisYear,
-    last30,
-    byMediaType,
-  }
-}
-
 export function StatisticsPage() {
-  const [records, setRecords] = useState<MediaRecord[]>([])
+  const [stats, setStats] = useState<UserStatsResponse | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    recordsApi.getAll().then((data) => {
-      setRecords(data)
+    statsApi.getMyStats().then((data) => {
+      setStats(data)
       setLoading(false)
     })
   }, [])
 
   if (loading) return <div className="text-center py-12 text-muted-foreground">Loading...</div>
-  if (records.length === 0)
-    return <div className="text-center py-12 text-muted-foreground">No records yet.</div>
+  if (!stats) return <div className="text-center py-12 text-muted-foreground">No records yet.</div>
 
-  const stats = computeStats(records)
+  const completionRate = (() => {
+    const tracked = stats.total - (stats.by_status.want_to_watch ?? 0)
+    return tracked > 0 ? Math.round(((stats.by_status.completed ?? 0) / tracked) * 100) : 0
+  })()
 
-  const statusChartData = Object.entries(stats.byStatus)
+  const statusChartData = Object.entries(stats.by_status)
     .filter(([, count]) => count > 0)
     .map(([status, count]) => ({
       name: STATUS_LABELS[status as keyof typeof STATUS_LABELS],
       value: count,
       color: STATUS_COLORS[status],
     }))
+
+  const mediaTypeCharData = stats.by_media_type.map(({ media_type, count }) => ({
+    name: MEDIA_TYPE_LABELS[media_type as keyof typeof MEDIA_TYPE_LABELS] ?? media_type,
+    count,
+  }))
 
   return (
     <div className="py-6 space-y-8">
@@ -133,9 +65,9 @@ export function StatisticsPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Total", value: stats.total },
-          { label: "Completed", value: stats.byStatus.completed ?? 0 },
-          { label: "This Year", value: stats.thisYear },
-          { label: "Last 30 Days", value: stats.last30 },
+          { label: "Completed", value: stats.by_status.completed ?? 0 },
+          { label: "This Year", value: stats.this_year },
+          { label: "Last 30 Days", value: stats.last_30_days },
         ].map(({ label, value }) => (
           <div key={label} className="border rounded-lg p-4 space-y-1">
             <p className="text-xs text-muted-foreground">{label}</p>
@@ -148,11 +80,13 @@ export function StatisticsPage() {
       <div className="grid grid-cols-2 gap-3">
         <div className="border rounded-lg p-4 space-y-1">
           <p className="text-xs text-muted-foreground">Avg Rating</p>
-          <p className="text-2xl font-semibold">{stats.avgRating ?? "—"}</p>
+          <p className="text-2xl font-semibold">
+            {stats.avg_rating != null ? stats.avg_rating.toFixed(1) : "—"}
+          </p>
         </div>
         <div className="border rounded-lg p-4 space-y-1">
           <p className="text-xs text-muted-foreground">Completion Rate</p>
-          <p className="text-2xl font-semibold">{stats.completionRate}%</p>
+          <p className="text-2xl font-semibold">{completionRate}%</p>
         </div>
       </div>
 
@@ -194,11 +128,11 @@ export function StatisticsPage() {
       </div>
 
       {/* Top Genres */}
-      {stats.topGenres.length > 0 && (
+      {stats.top_genres.length > 0 && (
         <div className="border rounded-lg p-4 space-y-3">
           <p className="text-sm font-medium">Top Genres</p>
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={stats.topGenres} layout="vertical" margin={{ left: 8, right: 16 }}>
+            <BarChart data={stats.top_genres} layout="vertical" margin={{ left: 8, right: 16 }}>
               <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
               <Tooltip />
@@ -209,11 +143,11 @@ export function StatisticsPage() {
       )}
 
       {/* Rating distribution */}
-      {stats.ratingBuckets.some((b) => b.count > 0) && (
+      {stats.rating_distribution.some((b) => b.count > 0) && (
         <div className="border rounded-lg p-4 space-y-3">
           <p className="text-sm font-medium">Rating Distribution</p>
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={stats.ratingBuckets} margin={{ left: 8, right: 16 }}>
+            <BarChart data={stats.rating_distribution} margin={{ left: 8, right: 16 }}>
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip />
@@ -224,11 +158,11 @@ export function StatisticsPage() {
       )}
 
       {/* Media type breakdown */}
-      {stats.byMediaType.length > 0 && (
+      {mediaTypeCharData.length > 0 && (
         <div className="border rounded-lg p-4 space-y-3">
           <p className="text-sm font-medium">By Media Type</p>
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={stats.byMediaType} margin={{ left: 8, right: 16 }}>
+            <BarChart data={mediaTypeCharData} margin={{ left: 8, right: 16 }}>
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip />

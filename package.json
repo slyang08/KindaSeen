@@ -1,6 +1,6 @@
 {
   "name": "kindaseen",
-  "version": "1.7.6",
+  "version": "1.7.7",
   "private": true,
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green -p \"[{name}]\" \"pnpm --filter @kindaseen/api dev\" \"pnpm --filter @kindaseen/web dev\"",
