@@ -4,10 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { favoritesApi } from "@/lib/favorites"
 
-export function useFavorites() {
+export function useFavorites(enabled = true) {
   return useQuery({
     queryKey: ["favorites"],
     queryFn: () => favoritesApi.getAll(),
+    enabled,
   })
 }
 

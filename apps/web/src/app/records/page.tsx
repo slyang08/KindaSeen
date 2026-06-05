@@ -8,12 +8,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
 import { RecordFormDialog, RecordList } from "@/features/records"
-import {
-  useCreateRecord,
-  useDeleteRecord,
-  useRecords,
-  useUpdateRecord,
-} from "@/features/records/queries"
+import { useCreateRecord, useRecords, useUpdateRecord } from "@/features/records/queries"
 
 type DialogMode = "create" | "edit"
 
@@ -40,7 +35,6 @@ export default function RecordsPage() {
   const { data: records = [] } = useRecords(!!user)
   const createRecord = useCreateRecord()
   const updateRecord = useUpdateRecord()
-  const deleteRecord = useDeleteRecord()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMode, setDialogMode] = useState<DialogMode>("create")
@@ -99,12 +93,6 @@ export default function RecordsPage() {
     setDialogOpen(true)
   }
 
-  const openEditDialog = (record: MediaRecord) => {
-    setDialogMode("edit")
-    setSelectedRecord(record)
-    setDialogOpen(true)
-  }
-
   const closeDialog = (open: boolean) => {
     setDialogOpen(open)
 
@@ -120,10 +108,6 @@ export default function RecordsPage() {
     } else {
       await createRecord.mutateAsync(data)
     }
-  }
-
-  const handleDelete = async (id: string) => {
-    deleteRecord.mutate(id)
   }
 
   if (loading) return null
@@ -144,7 +128,7 @@ export default function RecordsPage() {
       </div>
 
       {/* List */}
-      <RecordList records={records} onEdit={openEditDialog} onDelete={handleDelete} />
+      <RecordList records={records} />
 
       {/* Dialog */}
       <RecordFormDialog

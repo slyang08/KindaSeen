@@ -27,8 +27,6 @@ type SortKey = "created_at_desc" | "created_at_asc" | "rating_desc" | "rating_as
 
 type Props = {
   records: MediaRecord[]
-  onEdit: (record: MediaRecord) => void
-  onDelete: (id: string) => void
 }
 
 function FilterControls({
@@ -116,7 +114,7 @@ function FilterControls({
   )
 }
 
-export function RecordList({ records, onEdit, onDelete }: Props) {
+export function RecordList({ records }: Props) {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [mediaTypeFilter, setMediaTypeFilter] = useState<string>("all")
   const [genreFilter, setGenreFilter] = useState<string>("all")
@@ -264,8 +262,6 @@ export function RecordList({ records, onEdit, onDelete }: Props) {
             <RecordCard
               key={record.id}
               record={record}
-              onEdit={onEdit}
-              onDelete={onDelete}
               priority={index === 0}
               isFavorite={favoriteIds.has(record.id)}
             />
