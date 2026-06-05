@@ -7,8 +7,9 @@ import {
   STATUS_COLORS,
   STATUS_LABELS,
 } from "@kindaseen/shared"
-import { Heart, MoreVertical, Pencil, Trash2 } from "lucide-react"
+import { Heart, MoreVertical } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useState } from "react"
 
 import {
@@ -21,13 +22,11 @@ import { useToggleFavorite } from "@/features/favorites"
 
 type Props = {
   record: MediaRecord
-  onEdit?: (record: MediaRecord) => void
-  onDelete?: (id: string) => void
   priority?: boolean
   isFavorite?: boolean
 }
 
-export function RecordCard({ record, onEdit, onDelete, priority, isFavorite = false }: Props) {
+export function RecordCard({ record, priority, isFavorite = false }: Props) {
   const [expanded, setExpanded] = useState(false)
   const { mutate: toggleFavorite } = useToggleFavorite()
 
@@ -73,7 +72,9 @@ export function RecordCard({ record, onEdit, onDelete, priority, isFavorite = fa
       <div className="flex-1 min-w-0 space-y-1">
         {/* Row 1: Title + Media Type badge + ... menu */}
         <div className="flex items-start justify-between gap-2">
-          <p className="font-medium leading-snug">{title}</p>
+          <Link href={`/records/${record.id}`} className="font-medium leading-snug hover:underline">
+            {title}
+          </Link>
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs border rounded px-1.5 py-0.5 text-muted-foreground">
               {MEDIA_TYPE_LABELS[record.media_type]}
@@ -93,7 +94,7 @@ export function RecordCard({ record, onEdit, onDelete, priority, isFavorite = fa
                   />
                   {isFavorite ? "Unfavorite" : "Favorite"}
                 </DropdownMenuItem>
-                {onEdit && (
+                {/* {onEdit && (
                   <DropdownMenuItem onClick={() => onEdit(record)}>
                     <Pencil className="size-4 mr-2" />
                     Edit
@@ -107,7 +108,7 @@ export function RecordCard({ record, onEdit, onDelete, priority, isFavorite = fa
                     <Trash2 className="size-4 mr-2" />
                     Delete
                   </DropdownMenuItem>
-                )}
+                )} */}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

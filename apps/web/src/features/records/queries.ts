@@ -7,6 +7,7 @@ import { recordsApi } from "@/lib/records"
 export const recordKeys = {
   all: ["records"] as const,
   deleted: ["records", "deleted"] as const,
+  detail: (id: string) => ["records", id] as const,
 }
 
 export function useRecords(enabled = true) {
@@ -14,6 +15,14 @@ export function useRecords(enabled = true) {
     queryKey: recordKeys.all,
     queryFn: () => recordsApi.getAll(),
     enabled,
+  })
+}
+
+export function useRecord(id: string, enabled = true) {
+  return useQuery({
+    queryKey: recordKeys.detail(id),
+    queryFn: () => recordsApi.getById(id),
+    enabled: enabled ?? !!id,
   })
 }
 
