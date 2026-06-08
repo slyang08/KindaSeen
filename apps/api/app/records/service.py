@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 
 from app.records.repository import RecordRepository
 from app.records.schema import RecordCreate, RecordUpdate
+from app.users.stats_service import StatsService
 
 
 class RecordService:
@@ -31,10 +32,12 @@ class RecordService:
     def get_by_id(self, record_id: uuid.UUID, user_id: uuid.UUID):
         return self._get_or_404(record_id, user_id)
 
-    def create(self, data: RecordCreate, user_id: uuid.UUID):
-        return self.repository.create(data, user_id)
+    async def create(self, data: RecordCreate, user_id: uuid.UUID):
+        result = self.repository.create(data, user_id)
+        await StatsService.invalidate(user_id)
+        return result
 
-    def update(self, record_id: uuid.UUID, data: RecordUpdate, user_id: uuid.UUID):
+    async def update(self, record_id: uuid.UUID, data: RecordUpdate, user_id: uuid.UUID):
         record = self._get_or_404(record_id, user_id)
 
         if record.deleted_at:
@@ -43,13 +46,16 @@ class RecordService:
                 detail="Record is deleted",
             )
 
-        return self.repository.update(record, data)
+        result = self.repository.update(record, data)
+        await StatsService.invalidate(user_id)
+        return result
 
-    def delete(self, record_id: uuid.UUID, user_id: uuid.UUID):
+    async def delete(self, record_id: uuid.UUID, user_id: uuid.UUID):
         record = self._get_or_404(record_id, user_id)
         self.repository.soft_delete(record)
+        await StatsService.invalidate(user_id)
 
-    def restore(self, record_id: uuid.UUID, user_id: uuid.UUID):
+    async def restore(self, record_id: uuid.UUID, user_id: uuid.UUID):
         record = self._get_or_404(record_id, user_id, include_deleted=True)
 
         if not record.deleted_at:
@@ -58,9 +64,11 @@ class RecordService:
                 detail="Record is not deleted",
             )
 
-        return self.repository.restore(record)
+        result = self.repository.restore(record)
+        await StatsService.invalidate(user_id)
+        return result
 
-    def permanent_delete(self, record_id: uuid.UUID, user_id: uuid.UUID):
+    async def permanent_delete(self, record_id: uuid.UUID, user_id: uuid.UUID):
         record = self._get_or_404(record_id, user_id, include_deleted=True)
 
         if not record.deleted_at:
@@ -70,3 +78,4 @@ class RecordService:
             )
 
         self.repository.permanent_delete(record)
+        await StatsService.invalidate(user_id)
