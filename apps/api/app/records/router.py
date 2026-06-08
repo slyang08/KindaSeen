@@ -43,46 +43,46 @@ def get_record(
 
 
 @router.post("/", response_model=RecordResponse, status_code=status.HTTP_201_CREATED)
-def create_record(
+async def create_record(
     data: RecordCreate,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    return service.create(data, user_id)
+    return await service.create(data, user_id)
 
 
 @router.patch("/{record_id}", response_model=RecordResponse)
-def update_record(
+async def update_record(
     record_id: uuid.UUID,
     data: RecordUpdate,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    return service.update(record_id, data, user_id)
+    return await service.update(record_id, data, user_id)
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_record(
+async def delete_record(
     record_id: uuid.UUID,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    service.delete(record_id, user_id)
+    await service.delete(record_id, user_id)
 
 
 @router.patch("/{record_id}/restore", response_model=RecordResponse)
-def restore_record(
+async def restore_record(
     record_id: uuid.UUID,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    return service.restore(record_id, user_id)
+    return await service.restore(record_id, user_id)
 
 
 @router.delete("/{record_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
-def permanent_delete_record(
+async def permanent_delete_record(
     record_id: uuid.UUID,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    service.permanent_delete(record_id, user_id)
+    await service.permanent_delete(record_id, user_id)

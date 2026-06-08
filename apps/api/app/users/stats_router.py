@@ -18,8 +18,8 @@ def get_stats_service(db: Session = Depends(get_db)) -> StatsService:
 
 
 @router.get("/me/stats", response_model=UserStatsResponse)
-def get_my_stats(
+async def get_my_stats(
     service: StatsService = Depends(get_stats_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
 ):
-    return service.get_user_stats(user_id)
+    return await service.get_user_stats(user_id)

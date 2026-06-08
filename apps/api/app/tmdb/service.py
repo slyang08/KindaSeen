@@ -1,12 +1,15 @@
 # apps/api/app/tmdb/service.py
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 import httpx
 
+from app.core.cache import cache_get, cache_set
 from app.core.config import settings
 
 TMDB_BASE = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
+TMDB_SEARCH_TTL = 3600  # 1 hr
+TMDB_DETAIL_TTL = 86400  # 24 hr
 
 HEADERS = {
     "Authorization": f"Bearer {settings.tmdb_api_token}",
@@ -66,7 +69,17 @@ class TMDBResult:
     release_year: int | None
 
 
+def _search_key(query: str, media_type: str | None) -> str:
+    return f"tmdb:search:{query}:{media_type or 'all'}"
+
+
 async def search_tmdb(query: str, media_type: str | None = None) -> list[TMDBResult]:
+    key = _search_key(query, media_type)
+
+    cached = await cache_get(key)
+    if cached:
+        return [TMDBResult(**item) for item in cached]
+
     """
     media_type: "movie" | "tv" | None (None = multi search)
     """
@@ -106,4 +119,5 @@ async def search_tmdb(query: str, media_type: str | None = None) -> list[TMDBRes
             )
         )
 
+    await cache_set(key, [asdict(r) for r in results], TMDB_SEARCH_TTL)
     return results

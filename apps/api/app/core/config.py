@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     supabase_webhook_secret: str
     tmdb_api_token: str
     base_url: str
+    redis_url: str
 
     model_config = {"env_file": ".env"}
 

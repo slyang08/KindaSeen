@@ -11,3 +11,4 @@ PyJWT[crypto]
 httpx
 cachetools
 ruff
+redis
