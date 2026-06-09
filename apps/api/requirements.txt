@@ -12,3 +12,4 @@ httpx
 cachetools
 ruff
 redis
+celery[redis]

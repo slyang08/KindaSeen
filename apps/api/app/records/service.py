@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 
 from app.records.repository import RecordRepository
 from app.records.schema import RecordCreate, RecordUpdate
+from app.tasks.cleanup import permanent_delete_record
 from app.users.stats_service import StatsService
 
 
@@ -54,6 +55,11 @@ class RecordService:
         record = self._get_or_404(record_id, user_id)
         self.repository.soft_delete(record)
         await StatsService.invalidate(user_id)
+
+        permanent_delete_record.apply_async(
+            args=[str(record_id), str(user_id)],
+            countdown=60 * 60 * 24 * 30,  # 30 days
+        )
 
     async def restore(self, record_id: uuid.UUID, user_id: uuid.UUID):
         record = self._get_or_404(record_id, user_id, include_deleted=True)

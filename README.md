@@ -30,6 +30,8 @@ A full-stack media tracking app built as a portfolio project to explore modern w
 | External API | TMDB API (proxied through FastAPI)               |
 | Deployment   | Vercel (web), Render via Docker (API)            |
 | CI/CD        | GitHub Actions → Docker Hub → Render deploy hook |
+| Cache        | Redis (Upstash)                                  |
+| Jobs         | Celery, Celery Beat                              |
 
 ## Architecture Highlights
 
@@ -39,6 +41,8 @@ A full-stack media tracking app built as a portfolio project to explore modern w
 - **Supabase JWT auth** — Token verified server-side via JWKS with TTLCache to avoid redundant key fetches
 - **Optimistic mutations** — TanStack Query mutations update the cache immediately and roll back on API failure
 - **pgvector groundwork** — DB schema prepared for future OpenAI embedding-based recommendations
+- **Redis caching** — Two-tier cache strategy: TTL + event-based invalidation for user stats; TTL-only for TMDB search results (external API, no write hook)
+- **Background jobs** — Celery worker for async task execution; Celery Beat for scheduled jobs (daily TMDB metadata sync); countdown tasks for deferred permanent deletion after soft delete
 
 ## Project Structure
 
@@ -76,6 +80,7 @@ DATABASE_URL=your_supabase_db_url
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 TMDB_API_TOKEN=your_tmdb_bearer_token
+REDIS_URL=your_upstash_redis_url
 
 # apps/web/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -85,22 +90,34 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### 4. Start dev servers
 
-```bash
-# Run from root
-pnpm dev
-```
+\```bash
 
-| Service  | URL                        |
-| -------- | -------------------------- |
-| Next.js  | http://localhost:3000      |
-| FastAPI  | http://localhost:8000      |
-| API Docs | http://localhost:8000/docs |
+# Run from root
+
+pnpm dev
+
+# Run Celery worker (separate terminal, from apps/api)
+
+celery -A app.core.celery worker --loglevel=info
+
+# Run Celery Beat scheduler (separate terminal, from apps/api)
+
+celery -A app.core.celery beat --loglevel=info
+\```
+
+| Service       | URL                        |
+| ------------- | -------------------------- |
+| Next.js       | http://localhost:3000      |
+| FastAPI       | http://localhost:8000      |
+| API Docs      | http://localhost:8000/docs |
+| Celery Worker | (background process)       |
+| Celery Beat   | (background process)       |
 
 ## Roadmap
 
-- [ ] Rating system with stats (avg score, top-rated page)
-- [ ] Review / comment system
+- [x] Rating system with stats (avg score, distribution charts)
+- [x] Review / comment system
 - [ ] Infinite scroll & pagination
-- [ ] TMDB response caching (Redis or in-memory)
-- [ ] Background jobs (Celery/RQ) for data sync
+- [x] Redis caching — TTL + event-based invalidation for stats; TTL-only for TMDB search
+- [x] Background jobs — Celery Beat for daily TMDB sync; countdown tasks for deferred deletion
 - [ ] Recommendation engine (OpenAI embeddings + pgvector)
