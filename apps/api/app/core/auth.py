@@ -4,7 +4,7 @@ import uuid
 import httpx
 import jwt
 from cachetools import TTLCache
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
@@ -62,3 +62,14 @@ def get_current_user_id(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         ) from err
+
+
+async def get_optional_user_id(
+    authorization: str | None = Header(None),
+) -> uuid.UUID | None:
+    if not authorization:
+        return None
+    try:
+        return await get_current_user_id(authorization=authorization)
+    except Exception:
+        return None

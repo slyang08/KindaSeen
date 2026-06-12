@@ -9,6 +9,7 @@ from app.favorites.router import router as favorite_router
 from app.health.router import router as health_router
 from app.records.router import router as records_router
 from app.reviews.router import router as reviews_router
+from app.social.router import router as social_router
 from app.tmdb.router import router as tmdb_router
 from app.users.router import router as users_router
 from app.users.stats_router import router as stats_router
@@ -36,6 +37,7 @@ app.include_router(favorite_router)
 app.include_router(health_router)
 app.include_router(records_router)
 app.include_router(reviews_router)
+app.include_router(social_router)
 app.include_router(tmdb_router)
 app.include_router(users_router)
 app.include_router(stats_router)

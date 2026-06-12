@@ -17,6 +17,7 @@ class UserProfile(Base):
     display_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     bio: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    is_profile_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_public_sharing_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
