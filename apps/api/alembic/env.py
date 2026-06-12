@@ -9,6 +9,7 @@ from app.favorites.model import Favorite  # noqa: F401
 from app.favorites.share_model import FavoriteShareToken  # noqa: F401
 from app.records.model import Record  # noqa: F401
 from app.reviews.model import Comment, Review  # noqa: F401
+from app.social.model import Follow  # noqa: F401
 from app.users.model import UserProfile  # noqa: F401
 
 # this is the Alembic Config object, which provides

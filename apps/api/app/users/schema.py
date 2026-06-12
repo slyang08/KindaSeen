@@ -24,6 +24,7 @@ class UserProfileUpdate(BaseModel):
     avatar_url: str | None = None
     bio: str | None = None
     is_public_sharing_enabled: bool | None = None
+    is_profile_public: bool | None = None
 
 
 class SupabaseWebhookPayload(BaseModel):
