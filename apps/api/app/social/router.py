@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.activity.service import record_activity
 from app.core.auth import get_current_user_id, get_optional_user_id
 from app.core.database import get_db
 from app.social.repository import SocialRepository
@@ -23,8 +24,14 @@ def follow_user(
     username: str,
     service: SocialService = Depends(get_social_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
-    return service.follow(user_id, username)
+    result = service.follow(user_id, username)
+    record_activity(
+        db=db, actor_id=user_id, activity_type="follow", metadata={"followed_username": username}
+    )
+    db.commit()
+    return result
 
 
 @router.delete("/{username}/follow", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,5 +1,6 @@
 export * from "./api"
 export * from "./favorites"
+export * from "./feed"
 export * from "./records"
 export * from "./reviews"
 export * from "./stats"

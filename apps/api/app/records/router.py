@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.activity.service import record_activity
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.records.repository import RecordRepository
@@ -47,8 +48,19 @@ async def create_record(
     data: RecordCreate,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
-    return await service.create(data, user_id)
+    result = await service.create(data, user_id)
+    record_activity(
+        db=db,
+        actor_id=user_id,
+        activity_type="add_record",
+        object_id=result.id,
+        object_type="record",
+        metadata={"title": result.title, "media_type": result.media_type},
+    )
+    db.commit()
+    return result
 
 
 @router.patch("/{record_id}", response_model=RecordResponse)
@@ -57,8 +69,38 @@ async def update_record(
     data: RecordUpdate,
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
-    return await service.update(record_id, data, user_id)
+    original = service.get_by_id(record_id, user_id)
+    result = await service.update(record_id, data, user_id)
+    if data.rating is not None and data.rating != original.rating:
+        record_activity(
+            db=db,
+            actor_id=user_id,
+            activity_type="rate",
+            object_id=result.id,
+            object_type="record",
+            metadata={
+                "title": result.title,
+                "media_type": result.media_type,
+                "rating": data.rating,
+            },
+        )
+    if (
+        data.status is not None
+        and data.status.value == "want_to_watch"
+        and data.status != original.status
+    ):
+        record_activity(
+            db=db,
+            actor_id=user_id,
+            activity_type="watchlist_add",
+            object_id=result.id,
+            object_type="record",
+            metadata={"title": result.title, "media_type": result.media_type},
+        )
+    db.commit()
+    return result
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
