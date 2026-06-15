@@ -5,7 +5,7 @@
 
 🔗 [KindaSeen Website](https://kindaseen.vercel.app)
 
-A full-stack media tracking app built as a portfolio project to explore modern web architecture — featuring TMDB integration, optimistic UI, and a shareable Favorites system.
+A full-stack media tracking app built as a portfolio project to explore modern web architecture — featuring TMDB integration, optimistic UI, a shareable Favorites system, and a social activity feed.
 
 ## Features
 
@@ -16,6 +16,8 @@ A full-stack media tracking app built as a portfolio project to explore modern w
 - **Statistics** — Visual breakdown of your watching habits with charts
 - **Optimistic UI** — Instant feedback on record mutations with automatic rollback on failure
 - **Trash & Restore** — Soft delete with a recoverable Trash page
+- **Social System** — Follow/unfollow users, view followers/following lists, and browse public profiles
+- **Activity Feed** — Real-time-style feed of activity from followed users (added, rated, reviewed, favorited)
 
 ## Tech Stack
 
@@ -36,13 +38,15 @@ A full-stack media tracking app built as a portfolio project to explore modern w
 ## Architecture Highlights
 
 - **Monorepo** — pnpm workspaces with `apps/web`, `apps/api`, `packages/shared`
-- **Feature-based structure** — FastAPI backend organized by domain module (records, tmdb, favorites, auth), mirroring NestJS module patterns
+- **Feature-based structure** — FastAPI backend organized by domain module (records, tmdb, favorites, auth, social, feed), mirroring NestJS module patterns
 - **TMDB proxy** — All TMDB requests routed through the FastAPI backend to protect the API token and enable future caching
 - **Supabase JWT auth** — Token verified server-side via JWKS with TTLCache to avoid redundant key fetches
 - **Optimistic mutations** — TanStack Query mutations update the cache immediately and roll back on API failure
 - **pgvector groundwork** — DB schema prepared for future OpenAI embedding-based recommendations
 - **Redis caching** — Two-tier cache strategy: TTL + event-based invalidation for user stats; TTL-only for TMDB search results (external API, no write hook)
 - **Background jobs** — Celery worker for async task execution; Celery Beat for scheduled jobs (daily TMDB metadata sync); countdown tasks for deferred permanent deletion after soft delete
+- **Social graph** — `follows` join table with self-referential user relationships; follower/following counts denormalized for read performance
+- **Activity feed** — Append-only `activities` table written server-side on key user actions (add, rate, review, favorite); feed queries fan out across the follows graph with cursor-based pagination
 
 ## Project Structure
 
@@ -117,7 +121,10 @@ celery -A app.core.celery beat --loglevel=info
 
 - [x] Rating system with stats (avg score, distribution charts)
 - [x] Review / comment system
-- [ ] Infinite scroll & pagination
+- [x] Infinite scroll & pagination
 - [x] Redis caching — TTL + event-based invalidation for stats; TTL-only for TMDB search
 - [x] Background jobs — Celery Beat for daily TMDB sync; countdown tasks for deferred deletion
+- [x] Social system — Follow/unfollow, followers/following lists, public profiles
+- [x] Activity feed — Per-user feed of followed users' actions with pagination
+- [ ] Similar Users — Recommended follows based on overlapping watch history
 - [ ] Recommendation engine (OpenAI embeddings + pgvector)
