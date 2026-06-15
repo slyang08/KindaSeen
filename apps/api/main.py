@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.activity.router import router as activity_router
 from app.core.database import init_db
 from app.favorites.router import router as favorite_router
 from app.health.router import router as health_router
@@ -33,6 +34,7 @@ async def startup():
     logger.info("Database connected and tables created")
 
 
+app.include_router(activity_router)
 app.include_router(favorite_router)
 app.include_router(health_router)
 app.include_router(records_router)

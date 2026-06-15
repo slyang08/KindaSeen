@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.activity.service import record_activity
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.records.repository import RecordRepository
@@ -57,8 +58,19 @@ def update_review(
     data: ReviewUpdate,
     service: ReviewService = Depends(get_review_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
-    return service.update(review_id, user_id, data)
+    result = service.update(review_id, user_id, data)
+    record_activity(
+        db=db,
+        actor_id=user_id,
+        activity_type="review",
+        object_id=result.record_id,
+        object_type="record",
+        metadata={"title": result.title},
+    )
+    db.commit()
+    return result
 
 
 @router.delete("/reviews/{review_id}", status_code=status.HTTP_204_NO_CONTENT)

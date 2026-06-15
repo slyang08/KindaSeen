@@ -2,7 +2,7 @@
 "use client"
 
 import type { TMDBSearchResult } from "@kindaseen/shared"
-import { Menu, X } from "lucide-react"
+import { Menu, Rss, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -98,6 +98,11 @@ export function Header() {
                   </Button>
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/statistics">Statistics</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/feed" aria-label="Activity Feed">
+                      <Rss className="size-4" />
+                    </Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/settings">Settings</Link>
@@ -196,6 +201,13 @@ export function Header() {
                 className="text-sm py-2 hover:text-muted-foreground transition-colors"
               >
                 Statistics
+              </Link>
+              <Link
+                href="/feed"
+                onClick={() => setMenuOpen(false)}
+                className="text-sm py-2 hover:text-muted-foreground transition-colors"
+              >
+                Feed
               </Link>
               <Link
                 href="/settings"

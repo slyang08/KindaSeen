@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.activity.service import record_activity
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.favorites.repository import FavoriteRepository
@@ -43,8 +44,19 @@ def add_favorite(
     data: FavoriteCreate,
     service: FavoriteService = Depends(get_favorite_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
-    return service.add(user_id, data.record_id)
+    result = service.add(user_id, data.record_id)
+    record_activity(
+        db=db,
+        actor_id=user_id,
+        activity_type="favorite",
+        object_id=result.record_id,
+        object_type="record",
+        metadata={"title": result.title, "media_type": result.media_type},
+    )
+    db.commit()
+    return result
 
 
 @router.delete("/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
