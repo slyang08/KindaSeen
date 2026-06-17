@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.activity.repository import ActivityRepository
-from app.activity.schema import ActivityResponse
+from app.activity.schema import FeedResponse
 from app.activity.service import ActivityService
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
@@ -18,24 +18,28 @@ def get_activity_service(db: Session = Depends(get_db)) -> ActivityService:
     return ActivityService(ActivityRepository(db))
 
 
-@router.get("/me", response_model=list[ActivityResponse])
+@router.get("/me", response_model=FeedResponse)
 def get_feed(
     service: ActivityService = Depends(get_activity_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
-    limit: int = Query(default=20, le=50),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=50),
+    before_id: uuid.UUID | None = Query(default=None),
 ):
-    return service.get_feed(user_id, limit, offset)
+    items = service.get_feed(user_id, limit=limit + 1, before_id=before_id)
+    has_more = len(items) > limit
+    return {"items": items[:limit], "has_more": has_more}
 
 
-@router.get("/users/{username}", response_model=list[ActivityResponse])
+@router.get("/users/{username}", response_model=FeedResponse)
 def get_user_activities(
     username: str,
     service: ActivityService = Depends(get_activity_service),
-    limit: int = Query(default=20, le=50),
-    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=50),
+    before_id: uuid.UUID | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
-    user_profile_repo = UserProfileRepository(db)
-    profile = user_profile_repo.get_by_username(username)
-    return service.get_user_activities(profile.user_id, limit, offset)
+    user_profile_repository = UserProfileRepository(db)
+    profile = user_profile_repository.get_by_username(username)
+    items = service.get_user_activities(profile.user_id, limit=limit + 1, before_id=before_id)
+    has_more = len(items) > limit
+    return {"items": items[:limit], "has_more": has_more}

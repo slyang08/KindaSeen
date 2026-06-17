@@ -2,6 +2,7 @@
 "use client"
 
 import type { Record as MediaRecord, RecordCreate, TMDBSearchResult } from "@kindaseen/shared"
+import { GetRecordsParams } from "@kindaseen/shared"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/features/auth/AuthProvider"
 import { RecordFormDialog, RecordList } from "@/features/records"
 import { useCreateRecord, useRecords, useUpdateRecord } from "@/features/records/queries"
+import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel"
 
 type DialogMode = "create" | "edit"
 
@@ -28,11 +30,10 @@ export default function RecordsPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  // ======================
-  // State hierarchy (important)
-  // ======================
+  const [filterParams, setFilterParams] = useState<GetRecordsParams>({})
 
-  const { data: records = [] } = useRecords(!!user)
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useRecords(filterParams, !!user)
+  const sentinelRef = useInfiniteScrollSentinel({ hasNextPage, isFetchingNextPage, fetchNextPage })
   const createRecord = useCreateRecord()
   const updateRecord = useUpdateRecord()
 
@@ -65,9 +66,7 @@ export default function RecordsPage() {
 
   useEffect(() => {
     if (loading) return
-    if (!user) {
-      router.push("/login")
-    }
+    if (!user) router.push("/login")
   }, [user, loading, router])
 
   useEffect(() => {
@@ -110,8 +109,10 @@ export default function RecordsPage() {
     }
   }
 
-  if (loading) return null
-  if (!user) return null
+  if (loading || !user) return null
+
+  const records = data?.pages.flatMap((page) => page.items) ?? []
+  const total = data?.pages[0]?.total ?? 0
 
   // ======================
   // UI
@@ -128,7 +129,22 @@ export default function RecordsPage() {
       </div>
 
       {/* List */}
-      <RecordList records={records} />
+      <RecordList
+        records={records}
+        total={total}
+        filterParams={filterParams}
+        onFilterChange={setFilterParams}
+      />
+
+      <div ref={sentinelRef} className="py-4 text-center text-sm text-muted-foreground">
+        {isFetchingNextPage
+          ? "Loading..."
+          : hasNextPage
+            ? ""
+            : records.length > 0
+              ? "End of list"
+              : ""}
+      </div>
 
       {/* Dialog */}
       <RecordFormDialog

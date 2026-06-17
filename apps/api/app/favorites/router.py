@@ -17,6 +17,7 @@ from app.favorites.share_schema import (
     ShareTokenResponse,
 )
 from app.favorites.share_service import FavoriteShareService
+from app.records.model import Record
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
@@ -47,13 +48,18 @@ def add_favorite(
     db: Session = Depends(get_db),
 ):
     result = service.add(user_id, data.record_id)
+
+    record = db.get(Record, data.record_id)
     record_activity(
         db=db,
         actor_id=user_id,
         activity_type="favorite",
         object_id=result.record_id,
         object_type="record",
-        metadata={"title": result.title, "media_type": result.media_type},
+        metadata={
+            "title": record.title if record else None,
+            "media_type": record.media_type if record else None,
+        },
     )
     db.commit()
     return result

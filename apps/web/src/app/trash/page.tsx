@@ -12,12 +12,14 @@ import {
   usePermanentDeleteRecord,
   useRestoreRecord,
 } from "@/features/records/queries"
+import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel"
 
 export default function TrashPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const { data: records = [] } = useDeletedRecords(!!user)
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useDeletedRecords(!!user)
+  const sentinelRef = useInfiniteScrollSentinel({ hasNextPage, isFetchingNextPage, fetchNextPage })
   const restoreRecord = useRestoreRecord()
   const permanentDeleteRecord = usePermanentDeleteRecord()
   const [confirmId, setConfirmId] = useState<string | null>(null)
@@ -25,11 +27,10 @@ export default function TrashPage() {
   useEffect(() => {
     if (!loading && !user) router.push("/login")
   }, [loading, user, router])
+
   if (loading || !user) return null
 
-  const handleRestore = (id: string) => {
-    restoreRecord.mutate(id)
-  }
+  const records = data?.pages.flatMap((page) => page.items) ?? []
 
   return (
     <div className="py-6 space-y-6">
@@ -99,7 +100,7 @@ export default function TrashPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRestore(record.id)}
+                      onClick={() => restoreRecord.mutate(record.id)}
                       disabled={restoreRecord.isPending}
                     >
                       Restore
@@ -118,6 +119,9 @@ export default function TrashPage() {
             </div>
           </div>
         ))}
+        <div ref={sentinelRef} className="py-2 text-center text-sm text-muted-foreground">
+          {isFetchingNextPage ? "Loading..." : ""}
+        </div>
       </div>
     </div>
   )

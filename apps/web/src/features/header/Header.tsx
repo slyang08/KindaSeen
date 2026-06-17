@@ -21,7 +21,8 @@ export function Header() {
   const { data: profile } = useMyProfile()
   const [menuOpen, setMenuOpen] = useState(false)
   const deleteRecord = useDeleteRecord()
-  const { data: records = [] } = useRecords(!!user)
+  const { data: recordsData } = useRecords({}, !!user)
+  const records = recordsData?.pages.flatMap((page) => page.items) ?? []
 
   const handleAddToWatchlist = (result: TMDBSearchResult) => {
     createRecord.mutate({

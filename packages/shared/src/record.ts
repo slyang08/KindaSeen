@@ -50,3 +50,28 @@ export type TMDBSearchResult = {
   genres: string[];
   release_year: string | null;
 };
+
+export interface PaginatedRecordResponse {
+  items: Record[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
+export type RecordSortBy =
+  | "created_at"
+  | "updated_at"
+  | "title"
+  | "rating"
+  | "release_year";
+export type SortOrder = "asc" | "desc";
+
+export interface GetRecordsParams {
+  limit?: number;
+  offset?: number;
+  media_type?: string;
+  status?: string;
+  sort_by?: RecordSortBy;
+  sort_order?: SortOrder;
+}

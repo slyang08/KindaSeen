@@ -6,22 +6,26 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { useAuth } from "@/features/auth/AuthProvider"
-import { useDeleteRecord, useRecords, useUpdateRecord } from "@/features/records/queries"
+import { useDeleteRecord, useUpdateRecord, useWatchlist } from "@/features/records/queries"
 import { RecordFormDialog } from "@/features/records/RecordFormDialog"
 import { WatchlistCard } from "@/features/watchlist/WatchlistCard"
+import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel"
 
 export default function WatchlistPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  const { data: allRecords = [] } = useRecords(!!user)
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useWatchlist(!!user)
+  const watchlist = data?.pages.flatMap((page) => page.items) ?? []
+  const total = data?.pages[0]?.total ?? 0
+
+  const sentinelRef = useInfiniteScrollSentinel({ hasNextPage, isFetchingNextPage, fetchNextPage })
+
   const updateRecord = useUpdateRecord()
   const deleteRecord = useDeleteRecord()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState<MediaRecord | null>(null)
-
-  const watchlist = allRecords.filter((r) => r.status === "want_to_watch")
 
   useEffect(() => {
     if (!loading && !user) router.push("/login")
@@ -57,7 +61,7 @@ export default function WatchlistPage() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-semibold">Watchlist</h1>
           <span className="text-sm text-muted-foreground border rounded-full px-2.5 py-0.5">
-            {watchlist.length}
+            {total}
           </span>
         </div>
       </div>
@@ -78,6 +82,16 @@ export default function WatchlistPage() {
           ))}
         </div>
       )}
+
+      <div ref={sentinelRef} className="py-4 text-center text-sm text-muted-foreground">
+        {isFetchingNextPage
+          ? "Loading..."
+          : hasNextPage
+            ? ""
+            : watchlist.length > 0
+              ? "End of list"
+              : ""}
+      </div>
 
       <RecordFormDialog
         key={selectedRecord?.id}

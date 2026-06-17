@@ -26,3 +26,8 @@ export interface Activity {
   metadata: ActivityMetadata | null;
   created_at: string;
 }
+
+export interface FeedResponse {
+  items: Activity[];
+  has_more: boolean;
+}
