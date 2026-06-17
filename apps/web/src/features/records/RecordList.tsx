@@ -1,7 +1,14 @@
 // apps/web/src/features/records/RecordList.tsx
 "use client"
 
-import { MEDIA_TYPE_LABELS, type Record as MediaRecord, STATUS_LABELS } from "@kindaseen/shared"
+import {
+  GetRecordsParams,
+  MEDIA_TYPE_LABELS,
+  type Record as MediaRecord,
+  RecordSortBy,
+  SortOrder,
+  STATUS_LABELS,
+} from "@kindaseen/shared"
 import { SlidersHorizontal } from "lucide-react"
 import { useMemo, useState } from "react"
 
@@ -23,36 +30,40 @@ import {
 import { useFavorites } from "@/features/favorites"
 import { RecordCard } from "@/features/records/RecordCard"
 
-type SortKey = "created_at_desc" | "created_at_asc" | "rating_desc" | "rating_asc" | "title_asc"
-
 type Props = {
   records: MediaRecord[]
+  total: number
+  filterParams: GetRecordsParams
+  onFilterChange: (params: GetRecordsParams) => void
 }
 
 function FilterControls({
-  statusFilter,
-  setStatusFilter,
-  mediaTypeFilter,
-  setMediaTypeFilter,
-  genreFilter,
-  setGenreFilter,
-  sortKey,
-  setSortKey,
-  allGenres,
+  filterParams,
+  onFilterChange,
 }: {
-  statusFilter: string
-  setStatusFilter: (v: string) => void
-  mediaTypeFilter: string
-  setMediaTypeFilter: (v: string) => void
-  genreFilter: string
-  setGenreFilter: (v: string) => void
-  sortKey: SortKey
-  setSortKey: (v: SortKey) => void
-  allGenres: string[]
+  filterParams: GetRecordsParams
+  onFilterChange: (params: GetRecordsParams) => void
 }) {
+  const sortValue =
+    filterParams.sort_by && filterParams.sort_order
+      ? `${filterParams.sort_by}_${filterParams.sort_order}`
+      : "create_at_desc"
+
+  const handleSortChange = (value: string) => {
+    const lastUnderscore = value.lastIndexOf("_")
+    const sort_by = value.slice(0, lastUnderscore) as RecordSortBy
+    const sort_order = value.slice(lastUnderscore + 1) as SortOrder
+    onFilterChange({ ...filterParams, sort_by, sort_order })
+  }
+
   return (
     <>
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select
+        value={filterParams.status ?? "all"}
+        onValueChange={(v) =>
+          onFilterChange({ ...filterParams, status: v === "all" ? undefined : v })
+        }
+      >
         <SelectTrigger className="sm:w-36">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -68,7 +79,12 @@ function FilterControls({
         </SelectContent>
       </Select>
 
-      <Select value={mediaTypeFilter} onValueChange={setMediaTypeFilter}>
+      <Select
+        value={filterParams.media_type}
+        onValueChange={(v) =>
+          onFilterChange({ ...filterParams, media_type: v === "all" ? undefined : v })
+        }
+      >
         <SelectTrigger className="sm:w-36">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
@@ -82,23 +98,7 @@ function FilterControls({
         </SelectContent>
       </Select>
 
-      {allGenres.length > 0 && (
-        <Select value={genreFilter} onValueChange={setGenreFilter}>
-          <SelectTrigger className="sm:w-36">
-            <SelectValue placeholder="Genre" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Genres</SelectItem>
-            {allGenres.map((genre) => (
-              <SelectItem key={genre} value={genre}>
-                {genre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+      <Select value={sortValue} onValueChange={handleSortChange}>
         <SelectTrigger className="sm:w-40">
           <SelectValue placeholder="Sort" />
         </SelectTrigger>
@@ -114,85 +114,21 @@ function FilterControls({
   )
 }
 
-export function RecordList({ records }: Props) {
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [mediaTypeFilter, setMediaTypeFilter] = useState<string>("all")
-  const [genreFilter, setGenreFilter] = useState<string>("all")
-  const [sortKey, setSortKey] = useState<SortKey>("created_at_desc")
+export function RecordList({ records, total, filterParams, onFilterChange }: Props) {
   const [filterDialogOpen, setFilterDialogOpen] = useState(false)
-  const [showWantToWatch, setShowWantToWatch] = useState(false)
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const { data: favorites } = useFavorites()
   const favoriteIds = useMemo(() => new Set(favorites?.map((f) => f.record_id) ?? []), [favorites])
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
 
-  const allGenres = useMemo(() => {
-    const set = new Set<string>()
-    records.forEach((r) => r.genres?.forEach((g) => set.add(g)))
-    return Array.from(set).sort()
-  }, [records])
+  const activeFilterCount = [!!filterParams.status, !!filterParams.media_type].filter(
+    Boolean
+  ).length
 
-  const filtered = useMemo(() => {
-    return records
-      .filter((r) => showWantToWatch || r.status !== "want_to_watch")
-      .filter((r) => !showFavoritesOnly || favoriteIds.has(r.id))
-      .filter((r) => statusFilter === "all" || r.status === statusFilter)
-      .filter((r) => mediaTypeFilter === "all" || r.media_type === mediaTypeFilter)
-      .filter((r) => genreFilter === "all" || r.genres?.includes(genreFilter))
-      .sort((a, b) => {
-        switch (sortKey) {
-          case "created_at_asc":
-            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          case "created_at_desc":
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          case "rating_desc":
-            return (b.rating ?? -1) - (a.rating ?? -1)
-          case "rating_asc":
-            return (a.rating ?? 11) - (b.rating ?? 11)
-          case "title_asc":
-            return a.title.localeCompare(b.title)
-        }
-      })
-  }, [
-    records,
-    showWantToWatch,
-    showFavoritesOnly,
-    favoriteIds,
-    statusFilter,
-    mediaTypeFilter,
-    genreFilter,
-    sortKey,
-  ])
+  // Favorites filter stays client-side — it's a join with a separate query,
+  // not worth a backend round-trip
+  const displayed = showFavoritesOnly ? records.filter((r) => favoriteIds.has(r.id)) : records
 
-  const activeFilterCount = [
-    statusFilter !== "all",
-    mediaTypeFilter !== "all",
-    genreFilter !== "all",
-  ].filter(Boolean).length
-
-  const filterProps = {
-    statusFilter,
-    setStatusFilter,
-    mediaTypeFilter,
-    setMediaTypeFilter,
-    genreFilter,
-    setGenreFilter,
-    sortKey,
-    setSortKey,
-    allGenres,
-  }
-
-  const watchlistToggle = (
-    <button
-      onClick={() => setShowWantToWatch(!showWantToWatch)}
-      className={`text-sm border rounded px-3 py-1.5 transition-colors whitespace-nowrap ${
-        showWantToWatch
-          ? "bg-primary text-primary-foreground border-primary"
-          : "text-muted-foreground border-input"
-      }`}
-    >
-      {showWantToWatch ? "Hiding Watchlist" : "Show Watchlist"}
-    </button>
-  )
+  const filterProps = { filterParams, onFilterChange }
 
   const favoritesToggle = (
     <button
@@ -212,7 +148,6 @@ export function RecordList({ records }: Props) {
       {/* Desktop filters */}
       <div className="hidden sm:flex sm:flex-wrap sm:items-center gap-2">
         <FilterControls {...filterProps} />
-        {watchlistToggle}
         {favoritesToggle}
       </div>
 
@@ -232,7 +167,6 @@ export function RecordList({ records }: Props) {
             </span>
           )}
         </Button>
-        {watchlistToggle}
         {favoritesToggle}
       </div>
 
@@ -249,8 +183,11 @@ export function RecordList({ records }: Props) {
         </DialogContent>
       </Dialog>
 
+      {/* Results count */}
+      {total > 0 && <p className="text-sm text-muted-foreground">{total} records</p>}
+
       {/* Results */}
-      {filtered.length === 0 ? (
+      {displayed.length === 0 ? (
         <p className="text-center text-muted-foreground py-12">
           {records.length === 0
             ? "No records yet. Add your first one!"
@@ -258,7 +195,7 @@ export function RecordList({ records }: Props) {
         </p>
       ) : (
         <div className="space-y-3">
-          {filtered.map((record, index) => (
+          {displayed.map((record, index) => (
             <RecordCard
               key={record.id}
               record={record}

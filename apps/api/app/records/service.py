@@ -4,7 +4,7 @@ import uuid
 from fastapi import HTTPException, status
 
 from app.records.repository import RecordRepository
-from app.records.schema import RecordCreate, RecordUpdate
+from app.records.schema import RecordCreate, RecordSortBy, RecordUpdate, SortOrder
 from app.tasks.cleanup import permanent_delete_record
 from app.users.stats_service import StatsService
 
@@ -24,11 +24,31 @@ class RecordService:
 
         return record
 
-    def get_all(self, user_id: uuid.UUID):
-        return self.repository.get_all(user_id)
+    def get_all(
+        self,
+        user_id: uuid.UUID,
+        limit: int,
+        offset: int,
+        media_type: str | None = None,
+        status: str | None = None,
+        sort_by: RecordSortBy = RecordSortBy.created_at,
+        sort_order: SortOrder = SortOrder.desc,
+    ) -> tuple[list, int]:
+        return self.repository.get_all(
+            user_id,
+            limit=limit,
+            offset=offset,
+            media_type=media_type,
+            status=status,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )
 
-    def get_deleted(self, user_id: uuid.UUID):
-        return self.repository.get_deleted(user_id)
+    def get_watchlist(self, user_id: uuid.UUID, limit: int, offset: int) -> tuple[list, int]:
+        return self.repository.get_watchlist(user_id, limit=limit, offset=offset)
+
+    def get_deleted(self, user_id: uuid.UUID, limit: int, offset: int) -> tuple[list, int]:
+        return self.repository.get_deleted(user_id, limit=limit, offset=offset)
 
     def get_by_id(self, record_id: uuid.UUID, user_id: uuid.UUID):
         return self._get_or_404(record_id, user_id)

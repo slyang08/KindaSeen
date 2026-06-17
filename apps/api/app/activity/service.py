@@ -29,8 +29,10 @@ class ActivityService:
     def __init__(self, repository: ActivityRepository):
         self.repository = repository
 
-    def get_feed(self, user_id: uuid.UUID, limit: int, offset: int) -> list[dict]:
-        return self.repository.get_feed(user_id, limit, offset)
+    def get_feed(self, user_id: uuid.UUID, limit: int, before_id: uuid.UUID | None) -> list[dict]:
+        return self.repository.get_feed(user_id, limit, before_id)
 
-    def get_user_activities(self, actor_id: uuid.UUID, limit: int, offset: int) -> list[dict]:
-        return self.repository.get_user_activities(actor_id, limit, offset)
+    def get_user_activities(
+        self, actor_id: uuid.UUID, limit: int, before_id: uuid.UUID | None
+    ) -> list[dict]:
+        return self.repository.get_user_activities(actor_id, limit, before_id)

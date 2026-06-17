@@ -1,14 +1,23 @@
 # apps/api/app/records/router.py
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.activity.service import record_activity
 from app.core.auth import get_current_user_id
 from app.core.database import get_db
 from app.records.repository import RecordRepository
-from app.records.schema import RecordCreate, RecordResponse, RecordUpdate
+from app.records.schema import (
+    MediaType,
+    PaginatedRecordResponse,
+    RecordCreate,
+    RecordResponse,
+    RecordSortBy,
+    RecordUpdate,
+    SortOrder,
+    Status,
+)
 from app.records.service import RecordService
 
 router = APIRouter(prefix="/records", tags=["records"])
@@ -18,20 +27,67 @@ def get_record_service(db: Session = Depends(get_db)) -> RecordService:
     return RecordService(RecordRepository(db))
 
 
-@router.get("/", response_model=list[RecordResponse])
+@router.get("/", response_model=PaginatedRecordResponse)
 def get_records(
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    media_type: MediaType | None = Query(default=None),
+    status: Status | None = Query(default=None),
+    sort_by: RecordSortBy = Query(default=RecordSortBy.created_at),
+    sort_order: SortOrder = Query(default=SortOrder.desc),
 ):
-    return service.get_all(user_id)
+    items, total = service.get_all(
+        user_id,
+        limit=limit,
+        offset=offset,
+        media_type=media_type,
+        status=status,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+    return PaginatedRecordResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=offset + limit < total,
+    )
 
 
-@router.get("/trash", response_model=list[RecordResponse])
+@router.get("/trash", response_model=PaginatedRecordResponse)
 def get_deleted_records(
     service: RecordService = Depends(get_record_service),
     user_id: uuid.UUID = Depends(get_current_user_id),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ):
-    return service.get_deleted(user_id)
+    items, total = service.get_deleted(user_id, limit=limit, offset=offset)
+    return PaginatedRecordResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=offset + limit < total,
+    )
+
+
+@router.get("/watchlist", response_model=PaginatedRecordResponse)
+def get_watchlist(
+    service: RecordService = Depends(get_record_service),
+    user_id: uuid.UUID = Depends(get_current_user_id),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    items, total = service.get_watchlist(user_id, limit=limit, offset=offset)
+    return PaginatedRecordResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=offset + limit < total,
+    )
 
 
 @router.get("/{record_id}", response_model=RecordResponse)

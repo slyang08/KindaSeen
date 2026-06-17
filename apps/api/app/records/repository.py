@@ -2,31 +2,82 @@
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy import asc, desc, func
 from sqlalchemy.orm import Session
 
 from app.records.model import Record
-from app.records.schema import RecordCreate, RecordUpdate
+from app.records.schema import RecordCreate, RecordSortBy, RecordUpdate, SortOrder
 
 
 class RecordRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self, user_id: uuid.UUID) -> list[Record]:
-        return (
-            self.db.query(Record)
-            .filter(Record.user_id == user_id, Record.deleted_at.is_(None))
-            .order_by(Record.created_at.desc())
-            .all()
+    def get_all(
+        self,
+        user_id: uuid.UUID,
+        limit: int,
+        offset: int,
+        media_type: str | None = None,
+        status: str | None = None,
+        sort_by: RecordSortBy = RecordSortBy.created_at,
+        sort_order: SortOrder = SortOrder.desc,
+    ) -> tuple[list[Record], int]:
+        query = self.db.query(Record).filter(
+            Record.user_id == user_id,
+            Record.deleted_at.is_(None),
+            Record.status != "want_to_watch",
         )
 
-    def get_deleted(self, user_id: uuid.UUID) -> list[Record]:
-        return (
-            self.db.query(Record)
-            .filter(Record.user_id == user_id, Record.deleted_at.is_not(None))
-            .order_by(Record.deleted_at.desc())
-            .all()
+        if media_type:
+            query = query.filter(Record.media_type == media_type)
+        if status:
+            query = query.filter(Record.status == status)
+
+        total = query.with_entities(func.count()).scalar()
+
+        order_col = getattr(Record, sort_by.value)
+        order_fn = desc if sort_order == SortOrder.desc else asc
+        query = query.order_by(order_fn(order_col).nulls_last())
+
+        items = query.offset(offset).limit(limit).all()
+        return items, total
+
+    def get_watchlist(
+        self,
+        user_id: uuid.UUID,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Record], int]:
+        query = self.db.query(Record).filter(
+            Record.user_id == user_id,
+            Record.deleted_at.is_(None),
+            Record.status == "want_to_watch",
         )
+
+        total = query.with_entities(func.count()).scalar()
+        query = query.order_by(Record.created_at.desc())
+        items = query.offset(offset).limit(limit).all()
+        return items, total
+
+    def get_deleted(
+        self,
+        user_id: uuid.UUID,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[Record], int]:
+        query = (
+            self.db.query(Record)
+            .filter(
+                Record.user_id == user_id,
+                Record.deleted_at.is_not(None),
+            )
+            .order_by(Record.deleted_at.desc())
+        )
+
+        total = query.with_entities(func.count()).scalar()
+        items = query.offset(offset).limit(limit).all()
+        return items, total
 
     def get_by_id(
         self,

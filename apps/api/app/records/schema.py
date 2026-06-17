@@ -23,6 +23,19 @@ class Status(StrEnum):
     want_to_watch = "want_to_watch"
 
 
+class RecordSortBy(StrEnum):
+    created_at = "created_at"
+    updated_at = "updated_at"
+    title = "title"
+    rating = "rating"
+    release_year = "release_year"
+
+
+class SortOrder(StrEnum):
+    asc = "asc"
+    desc = "desc"
+
+
 class RecordBase(BaseModel):
     title: str
     media_type: MediaType
@@ -67,3 +80,11 @@ class RecordResponse(RecordBase):
     deleted_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class PaginatedRecordResponse(BaseModel):
+    items: list[RecordResponse]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool

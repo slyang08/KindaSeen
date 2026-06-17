@@ -18,3 +18,8 @@ class ActivityResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class FeedResponse(BaseModel):
+    items: list[ActivityResponse]
+    has_more: bool

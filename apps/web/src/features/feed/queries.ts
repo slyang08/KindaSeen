@@ -1,5 +1,5 @@
 // apps/web/src/features/feed/queries.ts
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 
 import { getFeed, getUserActivities } from "@/lib/feed"
 
@@ -10,16 +10,26 @@ export const feedKeys = {
 }
 
 export function useFeed() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: feedKeys.me(),
-    queryFn: () => getFeed(),
+    queryFn: ({ pageParam }) => getFeed(20, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.has_more) return undefined
+      return lastPage.items.at(-1)?.id
+    },
   })
 }
 
 export function useUserActivities(username: string) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: feedKeys.user(username),
-    queryFn: () => getUserActivities(username),
+    queryFn: ({ pageParam }) => getUserActivities(username, 20, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage.has_more) return undefined
+      return lastPage.items.at(-1)?.id
+    },
     enabled: !!username,
   })
 }

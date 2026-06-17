@@ -9,7 +9,7 @@ import { RecordCard, useRecords } from "@/features/records"
 import { useMyProfile } from "@/features/settings/queries"
 
 export default function FavoritesPage() {
-  const { data: records } = useRecords()
+  const { data: recordsData } = useRecords({})
   const { data: favorites } = useFavorites()
   const { data: profile } = useMyProfile()
   const { mutate: createShare, isPending } = useCreatePersonalShare()
@@ -21,10 +21,10 @@ export default function FavoritesPage() {
 
   const favoriteIds = useMemo(() => new Set(favorites?.map((f) => f.record_id) ?? []), [favorites])
 
-  const favoriteRecords = useMemo(
-    () => records?.filter((r) => favoriteIds.has(r.id)) ?? [],
-    [records, favoriteIds]
-  )
+  const favoriteRecords = useMemo(() => {
+    const records = recordsData?.pages.flatMap((page) => page.items) ?? []
+    return records?.filter((r) => favoriteIds.has(r.id))
+  }, [recordsData, favoriteIds])
 
   const handleGenerateLink = () => {
     setGeneratedLink(null)
