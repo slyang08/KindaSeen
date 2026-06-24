@@ -36,7 +36,7 @@ export function SettingsPage() {
 
   const handleTogglePublicSharing = () => {
     if (!profile) return
-    updateProfile({ is_public_sharing_enabled: !profile.is_public_sharing_enabled })
+    updateProfile({ is_profile_public: !profile.is_profile_public })
   }
 
   if (isLoading) return <div className="p-6">Loading...</div>
@@ -58,7 +58,7 @@ export function SettingsPage() {
             onChange={(e) => setUsername(e.target.value)}
           />
           {usernameError && <p className="text-sm text-red-500">{usernameError}</p>}
-          <p className="text-xs text-gray-400">Your public URL will be /u/{username}/favorites</p>
+          <p className="text-xs text-gray-400">Your public profile will be /u/{username}</p>
         </div>
 
         <div className="space-y-1">
@@ -95,23 +95,23 @@ export function SettingsPage() {
 
         <div className="flex items-center justify-between rounded-lg border p-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium">Public favorites</p>
+            <p className="text-sm font-medium">Public profile</p>
             <p className="text-xs text-gray-500">
-              {profile.is_public_sharing_enabled
-                ? `Anyone can view your favorites at /u/${profile.username}/favorites`
-                : "Your favorites are private"}
+              {profile.is_profile_public
+                ? `Anyone can view your profile, favorites, and activity at /u/${profile.username}`
+                : "Only people you allow to follow can view your profile"}
             </p>
           </div>
           <button
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              profile.is_public_sharing_enabled ? "bg-blue-500" : "bg-gray-300"
+              profile.is_profile_public ? "bg-blue-500" : "bg-gray-300"
             }`}
             onClick={handleTogglePublicSharing}
             disabled={isPending}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                profile.is_public_sharing_enabled ? "translate-x-6" : "translate-x-1"
+                profile.is_profile_public ? "translate-x-6" : "translate-x-1"
               }`}
             />
           </button>

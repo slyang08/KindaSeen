@@ -33,6 +33,10 @@ class ActivityService:
         return self.repository.get_feed(user_id, limit, before_id)
 
     def get_user_activities(
-        self, actor_id: uuid.UUID, limit: int, before_id: uuid.UUID | None
+        self,
+        actor_id: uuid.UUID,
+        limit: int,
+        before_id: uuid.UUID | None,
+        activity_types: list[str] | None = None,
     ) -> list[dict]:
-        return self.repository.get_user_activities(actor_id, limit, before_id)
+        return self.repository.get_user_activities(actor_id, limit, before_id, activity_types)

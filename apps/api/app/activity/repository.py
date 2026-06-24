@@ -64,9 +64,15 @@ class ActivityRepository:
         return self._rows_to_dicts(rows)
 
     def get_user_activities(
-        self, actor_id: uuid.UUID, limit: int, before_id: uuid.UUID | None
+        self,
+        actor_id: uuid.UUID,
+        limit: int,
+        before_id: uuid.UUID | None,
+        activity_types: list[str] | None = None,
     ) -> list[dict]:
         stmt = self._base_stmt().where(Activity.actor_id == actor_id)
+        if activity_types:
+            stmt = stmt.where(Activity.activity_type.in_(activity_types))
         stmt = self._apply_cursor(stmt, before_id)
         rows = self.db.execute(stmt.limit(limit)).all()
         return self._rows_to_dicts(rows)

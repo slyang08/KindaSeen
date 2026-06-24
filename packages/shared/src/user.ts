@@ -7,6 +7,7 @@ export interface UserProfile {
   avatar_url: string | null;
   bio: string | null;
   is_public_sharing_enabled: boolean;
+  is_profile_public: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -17,4 +18,5 @@ export interface UserProfileUpdate {
   avatar_url?: string | null;
   bio?: string | null;
   is_public_sharing_enabled?: boolean;
+  is_profile_public?: boolean;
 }
