@@ -3,12 +3,21 @@ import { ShareExpiry } from "@kindaseen/shared"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { favoritesApi } from "@/lib/favorites"
+import { getPublicFavorites } from "@/lib/users"
 
 export function useFavorites(enabled = true) {
   return useQuery({
     queryKey: ["favorites"],
     queryFn: () => favoritesApi.getAll(),
     enabled,
+  })
+}
+
+export function usePublicFavorites(username: string) {
+  return useQuery({
+    queryKey: ["favorites", "public", username],
+    queryFn: () => getPublicFavorites(username),
+    enabled: !!username,
   })
 }
 

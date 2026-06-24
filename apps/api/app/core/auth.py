@@ -70,6 +70,10 @@ async def get_optional_user_id(
     if not authorization:
         return None
     try:
-        return await get_current_user_id(authorization=authorization)
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() != "bearer" or not token:
+            return None
+        credentials = HTTPAuthorizationCredentials(scheme=scheme, credentials=token)
+        return get_current_user_id(credentials=credentials)
     except Exception:
         return None

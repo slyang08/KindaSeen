@@ -1,9 +1,7 @@
 // apps/web/src/lib/users.ts
-import type { UserProfile, UserProfileUpdate } from "@kindaseen/shared"
+import type { PaginatedRecordResponse, UserProfile, UserProfileUpdate } from "@kindaseen/shared"
 
 import { fetchWithAuth } from "@/lib/api"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 
 export async function getMyProfile(): Promise<UserProfile> {
   return fetchWithAuth("/users/me")
@@ -17,9 +15,33 @@ export async function updateMyProfile(data: UserProfileUpdate): Promise<UserProf
 }
 
 export async function getPublicFavorites(username: string) {
-  const res = await fetch(`${API_URL}/users/u/${username}/favorites`)
-  if (res.status === 403) throw new Error("This user's favorites are not public")
-  if (res.status === 404) throw new Error("User not found")
-  if (!res.ok) throw new Error("Failed to fetch favorites")
-  return res.json()
+  try {
+    return await fetchWithAuth(`/users/u/${username}/favorites`)
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("private")) {
+      throw new Error("This user's favorites are not public")
+    }
+    throw err
+  }
+}
+
+export async function getPublicWatchlist(
+  username: string,
+  limit = 20,
+  offset = 0
+): Promise<PaginatedRecordResponse> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  try {
+    return await fetchWithAuth(`/users/u/${username}/watchlist?${params}`)
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message.toLowerCase().includes("private")) {
+        throw new Error("This user's watchlist is not public")
+      }
+      if (err.message.toLowerCase().includes("not found")) {
+        throw new Error("User not found")
+      }
+    }
+    throw err
+  }
 }

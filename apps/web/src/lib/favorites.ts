@@ -1,7 +1,7 @@
 // apps/web/src/lib/favorites.ts
 import { Favorite, ShareExpiry, ShareTokenResponse } from "@kindaseen/shared"
 
-import { fetchWithAuth } from "@/lib/api"
+import { API_URL, fetchWithAuth } from "@/lib/api"
 
 export const favoritesApi = {
   getAll: (): Promise<Favorite[]> => fetchWithAuth("/favorites/"),
@@ -22,7 +22,6 @@ export const favoritesApi = {
 }
 
 export async function getSharedFavorites(token: string) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
   const res = await fetch(`${API_URL}/favorites/share/p/${token}`)
   if (res.status === 404) throw new Error("Invalid link")
   if (res.status === 410) throw new Error("This link has expired")

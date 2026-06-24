@@ -13,7 +13,7 @@ class SocialService:
         self.social_repository = social_repository
         self.user_repository = user_repository
 
-    def _check_profile_access(self, profile, current_user_id: uuid.UUID | None):
+    def check_profile_access(self, profile, current_user_id: uuid.UUID | None):
         # I can always view my own profile
         if current_user_id and current_user_id == profile.user_id:
             return
@@ -65,7 +65,7 @@ class SocialService:
     ) -> PublicProfileResponse:
         profile = self._get_profile_or_404(username)
 
-        self._check_profile_access(profile, current_user_id)
+        self.check_profile_access(profile, current_user_id)
 
         return PublicProfileResponse(
             user_id=profile.user_id,
@@ -87,7 +87,7 @@ class SocialService:
         from app.users.stats_service import StatsService
 
         profile = self._get_profile_or_404(username)
-        self._check_profile_access(profile, current_user_id)
+        self.check_profile_access(profile, current_user_id)
 
         stats_service = StatsService(StatsRepository(db))
         return await stats_service.get_user_stats(profile.user_id)

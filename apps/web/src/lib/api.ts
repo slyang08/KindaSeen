@@ -1,7 +1,7 @@
 // apps/web/src/lib/api.ts
 import { supabase } from "@/lib/supabase"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 
 async function getToken(): Promise<string | null> {
   const { data, error } = await supabase.auth.getSession()

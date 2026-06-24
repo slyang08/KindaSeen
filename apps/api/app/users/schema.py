@@ -12,6 +12,7 @@ class UserProfileResponse(BaseModel):
     avatar_url: str | None
     bio: str | None
     is_public_sharing_enabled: bool
+    is_profile_public: bool
     created_at: datetime
     updated_at: datetime
 

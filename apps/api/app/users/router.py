@@ -2,14 +2,19 @@
 import hmac
 import uuid
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
-from app.core.auth import get_current_user_id
+from app.core.auth import get_current_user_id, get_optional_user_id
 from app.core.config import settings
 from app.core.database import get_db
 from app.favorites.repository import FavoriteRepository
 from app.favorites.share_schema import SharedFavoriteResponse
+from app.records.router import get_record_service
+from app.records.schema import PaginatedRecordResponse
+from app.records.service import RecordService
+from app.social.router import get_social_service
+from app.social.service import SocialService
 from app.users.repository import UserProfileRepository
 from app.users.schema import SupabaseWebhookPayload, UserProfileResponse, UserProfileUpdate
 from app.users.service import UserProfileService
@@ -77,6 +82,8 @@ def update_my_profile(
 def get_public_favorites(
     username: str,
     service: UserProfileService = Depends(get_user_profile_service),
+    social_service: SocialService = Depends(get_social_service),
+    viewer_id: uuid.UUID | None = Depends(get_optional_user_id),
     db: Session = Depends(get_db),
 ):
     from app.favorites.model import Favorite
@@ -85,10 +92,10 @@ def get_public_favorites(
 
     profile = service.get_by_username(username)
 
-    if not profile.is_public_sharing_enabled:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="This user's favorites are not public"
-        )
+    if not profile:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    social_service.check_profile_access(profile, viewer_id)
 
     rows = (
         db.query(Favorite, Record)
@@ -106,3 +113,30 @@ def get_public_favorites(
         )
         for favorite, record in rows
     ]
+
+
+@router.get("/u/{username}/watchlist", response_model=PaginatedRecordResponse)
+def get_public_watchlist(
+    username: str,
+    service: UserProfileService = Depends(get_user_profile_service),
+    social_service: SocialService = Depends(get_social_service),
+    record_service: RecordService = Depends(get_record_service),
+    viewer_id: uuid.UUID | None = Depends(get_optional_user_id),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+):
+    profile = service.get_by_username(username)
+
+    if not profile:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    social_service.check_profile_access(profile, viewer_id)
+
+    items, total = record_service.get_watchlist(profile.user_id, limit=limit, offset=offset)
+    return PaginatedRecordResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=offset + limit < total,
+    )
