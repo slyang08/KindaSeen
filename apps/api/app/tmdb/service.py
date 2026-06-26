@@ -10,6 +10,8 @@ TMDB_BASE = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 TMDB_SEARCH_TTL = 3600  # 1 hr
 TMDB_DETAIL_TTL = 86400  # 24 hr
+RECOMMENDATIONS_TTL = 3600  # 1 hr
+TMDB_POPULAR_TTL = 21600  # 6 hr
 
 HEADERS = {
     "Authorization": f"Bearer {settings.tmdb_api_token}",
@@ -73,6 +75,10 @@ def _search_key(query: str, media_type: str | None) -> str:
     return f"tmdb:search:{query}:{media_type or 'all'}"
 
 
+def _recommendations_key(tmdb_id: int, media_type: str) -> str:
+    return f"tmdb:recommendations:{media_type}:{tmdb_id}"
+
+
 async def search_tmdb(query: str, media_type: str | None = None) -> list[TMDBResult]:
     key = _search_key(query, media_type)
 
@@ -120,4 +126,79 @@ async def search_tmdb(query: str, media_type: str | None = None) -> list[TMDBRes
         )
 
     await cache_set(key, [asdict(r) for r in results], TMDB_SEARCH_TTL)
+    return results
+
+
+async def get_tmdb_recommendations(tmdb_id: int, media_type: str) -> list[TMDBResult]:
+    """media_type must be 'movie' or 'tv'"""
+    key = _recommendations_key(tmdb_id, media_type)
+
+    cached = await cache_get(key)
+    if cached:
+        return [TMDBResult(**item) for item in cached]
+
+    url = f"{TMDB_BASE}/{media_type}/{tmdb_id}/recommendations"
+    genre_map = MOVIE_GENRE_MAP if media_type == "movie" else TV_GENRE_MAP
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, headers=HEADERS, params={"language": "zh-TW", "page": 1})
+        resp.raise_for_status()
+        data = resp.json()
+
+    results = []
+    for item in data.get("results", []):
+        title = item.get("title") or item.get("name") or ""
+        poster = item.get("poster_path")
+        date = item.get("release_date") or item.get("first_air_date") or ""
+
+        results.append(
+            TMDBResult(
+                tmdb_id=item["id"],
+                title=title,
+                media_type=media_type,
+                poster_url=f"{TMDB_IMAGE_BASE}{poster}" if poster else None,
+                overview=item.get("overview") or "",
+                tmdb_rating=round(item["vote_average"], 1) if item.get("vote_average") else None,
+                genres=[genre_map[gid] for gid in item.get("genre_ids", []) if gid in genre_map],
+                release_year=int(date[:4]) if len(date) >= 4 else None,
+            )
+        )
+
+    await cache_set(key, [asdict(r) for r in results], RECOMMENDATIONS_TTL)
+    return results
+
+
+async def get_tmdb_popular(media_type: str, page: int = 1) -> list[TMDBResult]:
+    key = f"tmdb:popular:{media_type}:{page}"
+    cached = await cache_get(key)
+    if cached:
+        return [TMDBResult(**item) for item in cached]
+
+    url = f"{TMDB_BASE}/{media_type}/popular"
+    genre_map = MOVIE_GENRE_MAP if media_type == "movie" else TV_GENRE_MAP
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, headers=HEADERS, params={"language": "zh-TW", "page": page})
+        resp.raise_for_status()
+        data = resp.json()
+
+    results = []
+    for item in data.get("results", []):
+        title = item.get("title") or item.get("name") or ""
+        poster = item.get("poster_path")
+        date = item.get("release_date") or item.get("first_air_date") or ""
+        results.append(
+            TMDBResult(
+                tmdb_id=item["id"],
+                title=title,
+                media_type=media_type,
+                poster_url=f"{TMDB_IMAGE_BASE}{poster}" if poster else None,
+                overview=item.get("overview") or "",
+                tmdb_rating=round(item["vote_average"], 1) if item.get("vote_average") else None,
+                genres=[genre_map[gid] for gid in item.get("genre_ids", []) if gid in genre_map],
+                release_year=int(date[:4]) if len(date) >= 4 else None,
+            )
+        )
+
+    await cache_set(key, [asdict(r) for r in results], TMDB_POPULAR_TTL)
     return results

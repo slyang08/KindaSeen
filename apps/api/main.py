@@ -8,6 +8,7 @@ from app.activity.router import router as activity_router
 from app.core.database import init_db
 from app.favorites.router import router as favorite_router
 from app.health.router import router as health_router
+from app.recommendations.router import router as recommendations_router
 from app.records.router import router as records_router
 from app.reviews.router import router as reviews_router
 from app.social.router import router as social_router
@@ -37,6 +38,7 @@ async def startup():
 app.include_router(activity_router)
 app.include_router(favorite_router)
 app.include_router(health_router)
+app.include_router(recommendations_router)
 app.include_router(records_router)
 app.include_router(reviews_router)
 app.include_router(social_router)
